@@ -15,7 +15,7 @@
   },
   "autoload": {
     "psr-4": {
-      "MZNX\ExchangeConnector\\": "src/"
+      "MZNX\\ExchangeConnector\\": "src/"
     }
   }
 }
