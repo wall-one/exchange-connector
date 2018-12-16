@@ -1,4 +1,5 @@
 {
+  "name": "mazanax/exchange-connector",
   "type": "library",
   "license": "MIT",
   "authors": [
