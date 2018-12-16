@@ -1,0 +1,21 @@
+{
+  "type": "library",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Alexander Gorshkov",
+      "email": "a.gorshkov@mznx.ru",
+      "role": "Developer"
+    }
+  ],
+  "require": {
+    "php": "^7.2",
+    "roave/security-advisories": "dev-master",
+    "guzzlehttp/guzzle": "6.3.3"
+  },
+  "autoload": {
+    "psr-4": {
+      "MZNX\ExchangeConnector\\": "src/"
+    }
+  }
+}
