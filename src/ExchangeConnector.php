@@ -168,8 +168,8 @@ class ExchangeConnector
     }
 
     /**
-     * @param string $from
-     * @param string $to
+     * @param string $side
+     * @param string $symbol
      * @param float $amount
      * @param float $price
      * @param float $qty
@@ -179,9 +179,13 @@ class ExchangeConnector
      * @throws ConnectorException
      * @throws \RuntimeException
      */
-    public function createOrder(string $from, string $to, float $amount,  float $price, float $qty): array
+    public function createOrder(string $side, string $symbol, float $price, ?float $qty = null, ?float $amount = null): array
     {
-        return $this->privateRequest('post', sprintf('account/%s/%s', $from, $to), [
+        if ((null !== $qty && null !== $amount) || (null === $qty && null === $amount)) {
+            throw new ConnectorException('You should specify only qty or amount');
+        }
+
+        return $this->privateRequest('post', sprintf('account/%s/%s', $symbol, $side), [
             'amount' => $amount,
             'price' => $price,
             'qty' => $qty,
