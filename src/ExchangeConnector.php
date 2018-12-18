@@ -254,12 +254,12 @@ class ExchangeConnector
      * @param array $data
      * @param array $headers
      *
-     * @return array
+     * @return mixed
      *
      * @throws ConnectorException
      * @throws \RuntimeException
      */
-    private function privateRequest(string $method, string $endpoint, array $data = [], array $headers = []): array
+    private function privateRequest(string $method, string $endpoint, array $data = [], array $headers = [])
     {
         return $this->request($method, $endpoint, $data, array_merge([], $headers, $this->connection ?? []));
     }
@@ -270,12 +270,12 @@ class ExchangeConnector
      * @param array $data
      * @param array $headers
      *
-     * @return array
+     * @return mixed
      *
      * @throws ConnectorException
      * @throws \RuntimeException
      */
-    private function request(string $method, string $endpoint, array $data = [], array $headers = []): array
+    private function request(string $method, string $endpoint, array $data = [], array $headers = [])
     {
         if (!$this->authenticated() && 0 !== strpos($endpoint, 'public/') && 'auth' !== $endpoint) {
             throw new ConnectorException('User not specified. Use with()');
