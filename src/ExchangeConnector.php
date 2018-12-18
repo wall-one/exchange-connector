@@ -277,7 +277,7 @@ class ExchangeConnector
      */
     private function request(string $method, string $endpoint, array $data = [], array $headers = []): array
     {
-        if (!$this->authenticated() && (0 !== strpos($endpoint, 'public/') || 'auth' !== $endpoint)) {
+        if (!$this->authenticated() && 0 !== strpos($endpoint, 'public/') && 'auth' !== $endpoint) {
             throw new ConnectorException('User not specified. Use with()');
         }
 
