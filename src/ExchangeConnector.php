@@ -118,7 +118,7 @@ class ExchangeConnector
      */
     public function wallet(): array
     {
-        return $this->privateRequest('get', 'account/wallet');
+        return $this->request('get', 'account/wallet');
     }
 
     /**
@@ -131,7 +131,7 @@ class ExchangeConnector
      */
     public function orders(int $limit = 10): array
     {
-        return $this->privateRequest('get', 'account/history_orders/all', ['limit' => $limit]);
+        return $this->request('get', 'account/history_orders/all', ['limit' => $limit]);
     }
 
     /**
@@ -145,7 +145,7 @@ class ExchangeConnector
      */
     public function ordersBySymbol(string $symbol, int $limit = 10): array
     {
-        return $this->privateRequest('get', sprintf('account/%s/history_orders', $symbol), ['limit' => $limit]);
+        return $this->request('get', sprintf('account/%s/history_orders', $symbol), ['limit' => $limit]);
     }
 
     /**
@@ -160,7 +160,7 @@ class ExchangeConnector
      */
     public function ordersList(string $base, string $symbols, int $limit = 10): array
     {
-        return $this->privateRequest(
+        return $this->request(
             'get',
             'account/history_orders_list',
             ['base' => $base, 'symbols' => $symbols, 'limit' => $limit]
@@ -185,7 +185,7 @@ class ExchangeConnector
             throw new ConnectorException('You should specify only qty or amount');
         }
 
-        return $this->privateRequest('post', sprintf('account/%s/%s', $symbol, $side), [
+        return $this->request('post', sprintf('account/%s/%s', $symbol, $side), [
             'amount' => $amount,
             'price' => $price,
             'qty' => $qty,
@@ -202,7 +202,7 @@ class ExchangeConnector
      */
     public function cancelOrder(string $symbol): array
     {
-        return $this->privateRequest('post', sprintf('account/%s/cancel', $symbol));
+        return $this->request('post', sprintf('account/%s/cancel', $symbol));
     }
 
     /**
@@ -215,7 +215,7 @@ class ExchangeConnector
      */
     public function openOrders(string $symbol): array
     {
-        return $this->privateRequest('get', sprintf('account/%s/open_orders', $symbol));
+        return $this->request('get', sprintf('account/%s/open_orders', $symbol));
     }
 
     /**
@@ -226,7 +226,7 @@ class ExchangeConnector
      */
     public function deposits(): array
     {
-        return $this->privateRequest('get', 'account/deposits');
+        return $this->request('get', 'account/deposits');
     }
 
     /**
@@ -237,7 +237,7 @@ class ExchangeConnector
      */
     public function withdrawals(): array
     {
-        return $this->privateRequest('get', 'account/withdrowals');
+        return $this->request('get', 'account/withdrowals');
     }
 
     /**
@@ -259,27 +259,13 @@ class ExchangeConnector
      * @throws ConnectorException
      * @throws \RuntimeException
      */
-    private function privateRequest(string $method, string $endpoint, array $data = [], array $headers = [])
-    {
-        return $this->request($method, $endpoint, $data, array_merge([], $headers, $this->connection ?? []));
-    }
-
-    /**
-     * @param string $method
-     * @param string $endpoint
-     * @param array $data
-     * @param array $headers
-     *
-     * @return mixed
-     *
-     * @throws ConnectorException
-     * @throws \RuntimeException
-     */
     private function request(string $method, string $endpoint, array $data = [], array $headers = [])
     {
-        if (!$this->authenticated() && 0 !== strpos($endpoint, 'public/') && 'auth' !== $endpoint) {
+        if (!$this->authenticated() && 'auth' !== $endpoint) {
             throw new ConnectorException('User not specified. Use with()');
         }
+
+        $headers = array_merge([], $headers, $this->connection ?? []);
 
         $params = [];
 
@@ -304,4 +290,3 @@ class ExchangeConnector
 
     }
 }
-
