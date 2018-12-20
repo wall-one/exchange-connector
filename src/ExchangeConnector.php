@@ -270,7 +270,9 @@ class ExchangeConnector
         $params = [];
 
         $params['post' === mb_strtolower($method) ? 'form_params' : 'query'] = $data;
-        $params['headers'] = array_merge(['Content-Type' => 'application/json'], $headers);
+        $params['headers'] = array_merge([
+            'Content-Type' => 'post' === mb_strtolower($method) ? 'application/x-www-form-urlencoded' : 'application/json'
+        ], $headers);
 
         try {
             $response = $this->client->request($method, $endpoint, $params)->getBody()->getContents();
