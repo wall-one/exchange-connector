@@ -174,12 +174,12 @@ class ExchangeConnector
      * @param float $price
      * @param float $qty
      *
-     * @return array
+     * @return string
      *
      * @throws ConnectorException
      * @throws \RuntimeException
      */
-    public function createOrder(string $side, string $symbol, float $price, ?float $qty = null, ?float $amount = null): array
+    public function createOrder(string $side, string $symbol, float $price, ?float $qty = null, ?float $amount = null): string
     {
         if ((null !== $qty && null !== $amount) || (null === $qty && null === $amount)) {
             throw new ConnectorException('You should specify only qty or amount');
