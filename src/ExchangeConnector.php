@@ -19,7 +19,7 @@ class ExchangeConnector
     private $cache;
 
     private $cacheKey;
-    private $cacheTime = 0;
+    private $cacheTime;
 
     /**
      * @param string $exchangeUrl
