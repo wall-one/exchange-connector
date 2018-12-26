@@ -6,6 +6,8 @@ namespace MZNX\ExchangeConnector;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\GuzzleException;
+use Psr\SimpleCache\CacheInterface;
+use Psr\SimpleCache\InvalidArgumentException;
 
 class ExchangeConnector
 {
@@ -13,6 +15,11 @@ class ExchangeConnector
     private $connection;
     /** @var Client */
     private $client;
+    /** @var CacheInterface|null */
+    private $cache;
+
+    private $cacheKey;
+    private $cacheTime = 0;
 
     /**
      * @param string $exchangeUrl
@@ -20,12 +27,14 @@ class ExchangeConnector
      * @param Connection|null $connection
      *
      * @throws ConnectorException
-     * @throws \InvalidArgumentException
-     * @throws \RuntimeException
      */
     public function __construct(string $exchangeUrl, ?Connection $connection = null)
     {
-        $this->client = new Client(['base_uri' => $exchangeUrl]);
+        try {
+            $this->client = new Client(['base_uri' => $exchangeUrl]);
+        } catch (\InvalidArgumentException $e) {
+            throw new ConnectorException($e->getMessage());
+        }
 
         if (null !== $connection) {
             $this->with($connection);
@@ -33,11 +42,53 @@ class ExchangeConnector
     }
 
     /**
+     * @param CacheInterface $cache
+     *
+     * @return ExchangeConnector
+     */
+    public function setCache(CacheInterface $cache): self
+    {
+        $this->cache = $cache;
+
+        return $this;
+    }
+
+    /**
+     * @param int $ttl
+     * @param null|string $key
+     *
+     * @return ExchangeConnector
+     * @throws ConnectorException
+     */
+    public function cache(int $ttl, ?string $key = null): self
+    {
+        if (!$this->cache instanceof CacheInterface) {
+            throw new ConnectorException('Cache is not defined. Use setCache() first!');
+        }
+
+        $this->cacheTime = $ttl;
+        $this->cacheKey = $key;
+
+        return $this;
+    }
+
+    /**
+     * @param null|string $key
+     *
+     * @return ExchangeConnector
+     *
+     * @throws ConnectorException
+     */
+    public function cacheForever(?string $key = null): self
+    {
+        return $this->cache(-1, $key);
+    }
+
+    /**
      * @param Connection $connection
      *
      * @return ExchangeConnector
      *
-     * @throws \RuntimeException
      * @throws ConnectorException
      */
     public function with(Connection $connection): self
@@ -54,7 +105,6 @@ class ExchangeConnector
      * @return array
      *
      * @throws ConnectorException
-     * @throws \RuntimeException
      */
     public function allowedMarkets(int $depth = 10): array
     {
@@ -65,7 +115,6 @@ class ExchangeConnector
      * @return array
      *
      * @throws ConnectorException
-     * @throws \RuntimeException
      */
     public function allowedSymbols(): array
     {
@@ -78,7 +127,6 @@ class ExchangeConnector
      * @return array
      *
      * @throws ConnectorException
-     * @throws \RuntimeException
      */
     public function markets(int $depth = 10): array
     {
@@ -92,7 +140,6 @@ class ExchangeConnector
      * @return array
      *
      * @throws ConnectorException
-     * @throws \RuntimeException
      */
     public function market(string $market, int $depth = 10): array
     {
@@ -103,7 +150,6 @@ class ExchangeConnector
      * @return array
      *
      * @throws ConnectorException
-     * @throws \RuntimeException
      */
     public function symbols(): array
     {
@@ -113,7 +159,6 @@ class ExchangeConnector
     /**
      * @return array
      *
-     * @throws \RuntimeException
      * @throws ConnectorException
      */
     public function wallet(): array
@@ -126,7 +171,6 @@ class ExchangeConnector
      *
      * @return array
      *
-     * @throws \RuntimeException
      * @throws ConnectorException
      */
     public function orders(int $limit = 10): array
@@ -141,7 +185,6 @@ class ExchangeConnector
      * @return array
      *
      * @throws ConnectorException
-     * @throws \RuntimeException
      */
     public function ordersBySymbol(string $symbol, int $limit = 10): array
     {
@@ -156,7 +199,6 @@ class ExchangeConnector
      * @return array
      *
      * @throws ConnectorException
-     * @throws \RuntimeException
      */
     public function ordersList(string $base, string $symbols, int $limit = 10): array
     {
@@ -177,10 +219,14 @@ class ExchangeConnector
      * @return string
      *
      * @throws ConnectorException
-     * @throws \RuntimeException
      */
-    public function createOrder(string $side, string $symbol, float $price, ?float $qty = null, ?float $amount = null): string
-    {
+    public function createOrder(
+        string $side,
+        string $symbol,
+        float $price,
+        ?float $qty = null,
+        ?float $amount = null
+    ): string {
         if ((null !== $qty && null !== $amount) || (null === $qty && null === $amount)) {
             throw new ConnectorException('You should specify only qty or amount');
         }
@@ -198,7 +244,6 @@ class ExchangeConnector
      * @return array
      *
      * @throws ConnectorException
-     * @throws \RuntimeException
      */
     public function cancelOrder(string $symbol): array
     {
@@ -211,7 +256,6 @@ class ExchangeConnector
      * @return array
      *
      * @throws ConnectorException
-     * @throws \RuntimeException
      */
     public function openOrders(string $symbol): array
     {
@@ -221,7 +265,6 @@ class ExchangeConnector
     /**
      * @return array
      *
-     * @throws \RuntimeException
      * @throws ConnectorException
      */
     public function deposits(): array
@@ -232,7 +275,6 @@ class ExchangeConnector
     /**
      * @return array
      *
-     * @throws \RuntimeException
      * @throws ConnectorException
      */
     public function withdrawals(): array
@@ -257,38 +299,81 @@ class ExchangeConnector
      * @return mixed
      *
      * @throws ConnectorException
-     * @throws \RuntimeException
      */
     private function request(string $method, string $endpoint, array $data = [], array $headers = [])
     {
-        if (!$this->authenticated() && 'auth' !== $endpoint) {
+        if ('auth' !== $endpoint && !$this->authenticated()) {
             throw new ConnectorException('User not specified. Use with()');
         }
 
-        $headers = array_merge([], $headers, $this->connection ?? []);
+        /**
+         * @return mixed
+         *
+         * @throws \RuntimeException
+         */
+        $makeRequest = function () use ($method, $endpoint, $data, $headers) {
+            $headers = array_merge([], $headers, $this->connection ?? []);
 
-        $params = [];
+            $params = [];
 
-        $params['post' === mb_strtolower($method) ? 'form_params' : 'query'] = $data;
-        $params['headers'] = array_merge([
-            'Content-Type' => 'post' === mb_strtolower($method) ? 'application/x-www-form-urlencoded' : 'application/json'
-        ], $headers);
+            $params['post' === mb_strtolower($method) ? 'form_params' : 'query'] = $data;
+            $params['headers'] = array_merge([
+                'Content-Type' => 'post' === mb_strtolower($method)
+                    ? 'application/x-www-form-urlencoded'
+                    : 'application/json'
+            ], $headers);
 
-        try {
-            $response = $this->client->request($method, $endpoint, $params)->getBody()->getContents();
-        } catch (ClientException | GuzzleException $exception) {
-            $response = $exception->getResponse();
+            try {
+                $response = $this->client->request($method, $endpoint, $params)->getBody()->getContents();
+            } catch (ClientException | GuzzleException $exception) {
+                $response = $exception->getResponse();
 
-            if (!$response) {
-                throw new ConnectorException('Request error: ' . $exception->getMessage());
+                if (!$response) {
+                    throw new ConnectorException('Request error: ' . $exception->getMessage());
+                }
+
+                $json = \json_decode($contents = $response->getBody()->getContents(), true);
+
+                throw new ConnectorException($json['error'] ?? $exception->getMessage());
             }
 
-            $json = \json_decode($contents = $response->getBody()->getContents(), true);
+            return \json_decode($response, true)['result'];
+        };
 
-            throw new ConnectorException($json['error'] ?? $exception->getMessage());
+        try {
+            if (null !== $this->cacheTime) {
+                $key = $this->cacheKey ?? sha1($method . $endpoint . json_encode($data) . json_encode($headers));
+                $response = $this->cached($key, $makeRequest, $this->cacheTime);
+
+                $this->cacheTime = null;
+                $this->cacheKey = null;
+
+                return $response;
+            }
+
+            return $makeRequest();
+        } catch (\Exception | \Throwable | InvalidArgumentException $e) {
+            throw new ConnectorException($e->getMessage());
+        }
+    }
+
+    /**
+     * @param string $key
+     * @param callable $callback
+     * @param int $ttl
+     *
+     * @return callable|mixed
+     *
+     * @throws InvalidArgumentException
+     */
+    private function cached(string $key, callable $callback, int $ttl)
+    {
+        if (!$this->cache->has($key)) {
+            $this->cache->set($key, $result = $callback(), $ttl >= 0 ? $ttl : null);
+
+            return $result;
         }
 
-        return \json_decode($response, true)['result'];
-
+        return $this->cache->get($key);
     }
 }
