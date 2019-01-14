@@ -22,8 +22,18 @@ class ExchangeConnector
     private $cacheTime;
 
     /**
+     * @param string $base
+     * @param string $quote
+     * 
+     * @return string
+     */
+    public static function buildMarketName(string $base, string $quote): string
+    {
+        return sprintf('%s_%s', $quote, $base);
+    }
+    
+    /**
      * @param string $exchangeUrl
-     *
      * @param Connection|null $connection
      *
      * @throws ConnectorException
