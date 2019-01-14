@@ -29,7 +29,7 @@ class ExchangeConnector
      */
     public static function buildMarketName(string $base, string $quote): string
     {
-        return sprintf('%s_%s', $quote, $base);
+        return mb_strtoupper(sprintf('%s_%s', $quote, $base));
     }
     
     /**
