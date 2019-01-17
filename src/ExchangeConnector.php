@@ -167,6 +167,24 @@ class ExchangeConnector
     }
 
     /**
+     * @param string $symbol
+     * @param string $interval
+     * @param int $limit
+     * @return array
+     * @throws ConnectorException
+     */
+    public function candles(string $symbol, string $interval, int $limit): array
+    {
+        $query = [
+            'symbol' => $symbol,
+            'interval' => $interval,
+            'limit' => $limit
+        ];
+
+        return $this->request('get', 'public/klines', $query);
+    }
+
+    /**
      * @return array
      *
      * @throws ConnectorException
