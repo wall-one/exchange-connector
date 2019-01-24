@@ -157,6 +157,20 @@ class ExchangeConnector
     }
 
     /**
+     * @param string $name
+     *
+     * @return bool
+     *
+     * @throws ConnectorException
+     */
+    public function symbolExists(string $name): bool
+    {
+        $allowedSymbols = array_map('mb_strtoupper', array_column($this->allowedSymbols(), 'symbol'));
+        
+        return \in_array(mb_strtoupper($name), $allowedSymbols, true);
+    }
+    
+    /**
      * @return array
      *
      * @throws ConnectorException
