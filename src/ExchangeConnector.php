@@ -219,6 +219,19 @@ class ExchangeConnector
     {
         return $this->request('get', 'account/history_orders/all', ['limit' => $limit]);
     }
+    
+    /**
+     * @param string $symbol
+     * @param string|int $id
+     *
+     * @return array
+     *
+     * @throws ConnectorException
+     */
+    public function orderInfo(string $symbol, $id): array
+    {
+        return $this->request('get', sprintf('account/%s/orderinfo', $symbol), ['orderId' => $id]);
+    }
 
     /**
      * @param string $symbol
