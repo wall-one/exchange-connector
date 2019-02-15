@@ -11,6 +11,8 @@ use Psr\SimpleCache\InvalidArgumentException;
 
 class ExchangeConnector
 {
+    public const DELIMITER = '_'
+    
     /** @var array|null */
     private $connection;
     /** @var Client */
@@ -29,7 +31,7 @@ class ExchangeConnector
      */
     public static function buildMarketName(string $base, string $quote): string
     {
-        return mb_strtoupper(sprintf('%s_%s', $quote, $base));
+        return mb_strtoupper(sprintf('%s%s%s', $quote, static::DELIMITER, $base));
     }
     
     /**
@@ -165,9 +167,26 @@ class ExchangeConnector
      */
     public function symbolExists(string $name): bool
     {
-        $allowedSymbols = array_map('mb_strtoupper', array_column($this->allowedSymbols(), 'symbol'));
+        $symbols = array_map('mb_strtoupper', array_column($this->symbols(), 'symbol'));
         
-        return \in_array(mb_strtoupper($name), $allowedSymbols, true);
+        return \in_array(mb_strtoupper($name), $symbols, true);
+    }
+    
+    /**
+     * @param string $asset
+     *
+     * @return bool
+     *
+     * @throws ConnectorException
+     */
+    public function assetExists(string $asset): bool
+    {
+        $symbols = array_map('mb_strtoupper', array_column($this->symbols(), 'symbol'));
+        $assets = array_merge(...array_map(function (string $symbol) {
+            return explode(static::DELIMITER, $symbol);
+        }, $symbols));
+        
+        return \in_array(mb_strtoupper($asset), $assets, true);
     }
     
     /**
