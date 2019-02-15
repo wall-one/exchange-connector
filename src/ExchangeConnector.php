@@ -11,7 +11,7 @@ use Psr\SimpleCache\InvalidArgumentException;
 
 class ExchangeConnector
 {
-    public const DELIMITER = '_'
+    public const DELIMITER = '_';
     
     /** @var array|null */
     private $connection;
