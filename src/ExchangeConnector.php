@@ -411,7 +411,7 @@ class ExchangeConnector
                 throw new ConnectorException($json['error'] ?? $exception->getMessage());
             }
 
-            return \json_decode($response, true)['result'];
+            return \json_decode($response, true)['result'] ?? [];
         };
 
         try {
