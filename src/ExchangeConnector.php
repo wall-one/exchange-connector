@@ -33,7 +33,21 @@ class ExchangeConnector
     {
         return mb_strtoupper(sprintf('%s%s%s', $quote, static::DELIMITER, $base));
     }
-    
+
+    /**
+     * Returns array [$base, $quote]
+     *
+     * @param string $symbol
+     *
+     * @return array
+     */
+    public static function splitMarketName(string $symbol): array
+    {
+        [$quote, $base] = array_map('mb_strtoupper', explode(static::DELIMITER, $symbol));
+
+        return [$base, $quote];
+    }
+
     /**
      * @param string $exchangeUrl
      * @param Connection|null $connection
@@ -155,7 +169,15 @@ class ExchangeConnector
      */
     public function market(string $market, int $depth = 10): array
     {
-        return $this->request('get', sprintf('public/%s/order_book', $market), ['depth' => $depth]);
+        try {
+            return $this->request('get', sprintf('public/%s/order_book', $market), ['depth' => $depth]);
+        } catch (ConnectorException $exception) {
+            if (!$this->symbolExists($market)) {
+                throw new ConnectorException(sprintf('Market %s not exists', $market));
+            }
+
+            throw $exception;
+        }
     }
 
     /**
@@ -182,9 +204,12 @@ class ExchangeConnector
     public function assetExists(string $asset): bool
     {
         $symbols = array_map('mb_strtoupper', array_column($this->symbols(), 'symbol'));
-        $assets = array_merge(...array_map(function (string $symbol) {
-            return explode(static::DELIMITER, $symbol);
-        }, $symbols));
+        $assets = array_merge(...array_map(
+            function (string $symbol) {
+                return explode(static::DELIMITER, $symbol);
+            },
+            $symbols
+        ));
         
         return \in_array(mb_strtoupper($asset), $assets, true);
     }
@@ -249,7 +274,15 @@ class ExchangeConnector
      */
     public function orderInfo(string $symbol, $id): array
     {
-        return $this->request('get', sprintf('account/%s/orderinfo', $symbol), ['orderId' => $id]);
+        try {
+            return $this->request('get', sprintf('account/%s/orderinfo', $symbol), ['orderId' => $id]);
+        } catch (ConnectorException $exception) {
+            if (!$this->symbolExists($symbol)) {
+                throw new ConnectorException(sprintf('Symbol %s not exists', $symbol));
+            }
+
+            throw $exception;
+        }
     }
 
     /**
@@ -262,7 +295,15 @@ class ExchangeConnector
      */
     public function ordersBySymbol(string $symbol, int $limit = 10): array
     {
-        return $this->request('get', sprintf('account/%s/history_orders', $symbol), ['limit' => $limit]);
+        try {
+            return $this->request('get', sprintf('account/%s/history_orders', $symbol), ['limit' => $limit]);
+        } catch (ConnectorException $exception) {
+            if (!$this->symbolExists($symbol)) {
+                throw new ConnectorException(sprintf('Symbol %s not exists', $symbol));
+            }
+
+            throw $exception;
+        }
     }
 
     /**
@@ -305,11 +346,19 @@ class ExchangeConnector
             throw new ConnectorException('You should specify only qty or amount');
         }
 
-        return $this->request('post', sprintf('account/%s/%s', $symbol, $side), [
-            'amount' => $amount,
-            'price' => $price,
-            'qty' => $qty,
-        ]);
+        try {
+            return $this->request('post', sprintf('account/%s/%s', $symbol, $side), [
+                'amount' => $amount,
+                'price' => $price,
+                'qty' => $qty,
+            ]);
+        } catch (ConnectorException $exception) {
+            if (!$this->symbolExists($symbol)) {
+                throw new ConnectorException(sprintf('Symbol %s not exists', $symbol));
+            }
+
+            throw $exception;
+        }
     }
 
     /**
@@ -321,7 +370,15 @@ class ExchangeConnector
      */
     public function cancelOrder(string $symbol): array
     {
-        return $this->request('post', sprintf('account/%s/cancel', $symbol));
+        try {
+            return $this->request('post', sprintf('account/%s/cancel', $symbol));
+        } catch (ConnectorException $exception) {
+            if (!$this->symbolExists($symbol)) {
+                throw new ConnectorException(sprintf('Symbol %s not exists', $symbol));
+            }
+
+            throw $exception;
+        }
     }
 
     /**
@@ -333,7 +390,15 @@ class ExchangeConnector
      */
     public function openOrders(string $symbol): array
     {
-        return $this->request('get', sprintf('account/%s/open_orders', $symbol));
+        try {
+            return $this->request('get', sprintf('account/%s/open_orders', $symbol));
+        } catch (ConnectorException $exception) {
+            if (!$this->symbolExists($symbol)) {
+                throw new ConnectorException(sprintf('Symbol %s not exists', $symbol));
+            }
+
+            throw $exception;
+        }
     }
 
     /**
