@@ -472,8 +472,13 @@ class ExchangeConnector
                 }
 
                 $json = \json_decode($contents = $response->getBody()->getContents(), true);
+                $errorMessage = $json['error'];
 
-                throw new ConnectorException($json['error'] ?? $exception->getMessage());
+                if ($json['message'] ?? '') {
+                    $errorMessage .= ':' . $json['message'];
+                }
+
+                throw new ConnectorException($errorMessage ?? $exception->getMessage());
             }
 
             return \json_decode($response, true)['result'] ?? [];
