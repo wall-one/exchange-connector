@@ -24,10 +24,6 @@ class Connection
      */
     public function __construct(string $exchange, string $apiKey, string $secretKey, ?string $customerId = null)
     {
-        if (!\in_array(mb_strtolower($exchange), ['bittrex', 'kraken', 'bitstamp', 'binance', 'okex'], true)) {
-            throw new ConnectorException('Unexpected exchange. Expected: bittrex, kraken, bitstamp or binance, but got: ' . $exchange);
-        }
-
         $this->exchange = mb_strtolower($exchange);
         $this->apiKey = $apiKey;
         $this->secretKey = $secretKey;
