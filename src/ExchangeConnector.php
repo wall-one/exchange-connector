@@ -255,11 +255,11 @@ class ExchangeConnector
     /**
      * @param int $limit
      *
-     * @return array
+     * @return WaitResponse|array
      *
      * @throws ConnectorException
      */
-    public function orders(int $limit = 10): array
+    public function orders(int $limit = 10)
     {
         return $this->request('get', 'account/history_orders/all', ['limit' => $limit]);
     }
