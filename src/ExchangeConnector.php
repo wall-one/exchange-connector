@@ -481,7 +481,14 @@ class ExchangeConnector
                 throw new ConnectorException($errorMessage ?? $exception->getMessage());
             }
 
-            return \json_decode($response, true)['result'] ?? [];
+            $json = \json_decode($response, true);
+            $result = $json['result'] ?? [];
+
+            if (!$result && ($json['message'] ?? '') === 'WAIT') {
+                return new WaitResponse();
+            }
+
+            return $result;
         };
 
         try {
