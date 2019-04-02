@@ -430,6 +430,8 @@ class ExchangeConnector
     }
 
     /**
+     * !!!!REFACTOR ME PLEASE!!!!
+     *
      * @param string $method
      * @param string $endpoint
      * @param array $data
