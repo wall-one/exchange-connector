@@ -3,25 +3,33 @@ declare(strict_types=1);
 
 namespace MZNX\ExchangeConnector;
 
-use GuzzleHttp\Client;
-use GuzzleHttp\Exception\ClientException;
-use GuzzleHttp\Exception\GuzzleException;
-use Psr\SimpleCache\CacheInterface;
-use Psr\SimpleCache\InvalidArgumentException;
+use MZNX\ExchangeConnector\Exchange\Exchange;
 
+/**
+ * @deprecated Will be removed in 2.0. Use MZNX\ExchangeConnector\Connector instead
+ * @see Connector
+ *
+ * @method string auth(Connection $connection)
+ * @method bool authenticated()
+ * @method array candles(string $symbol, string $interval, int $limit)
+ * @method array wallet()
+ * @method WaitResponse|array orders(int $limit = 10)
+ * @method array orderInfo(string $symbol, $id)
+ * @method array ordersBySymbol(string $symbol, int $limit = 10)
+ * @method string createOrder(string $side, string $symbol, float $price, float $qty)
+ * @method bool cancelOrder($symbolOrId)
+ * @method array openOrders(string $symbol)
+ * @method array deposits()
+ * @method array withdrawals()
+ * @method array market(string $market, int $depth = 10)
+ * @method array symbols()
+ */
 class ExchangeConnector
 {
-    public const DELIMITER = '_';
-    
-    /** @var array|null */
-    private $connection;
-    /** @var Client */
-    private $client;
-    /** @var CacheInterface|null */
-    private $cache;
+    private $connector;
 
-    private $cacheKey;
-    private $cacheTime;
+    /** @var Connection */
+    private $connection;
 
     /**
      * @param string $base
@@ -31,7 +39,7 @@ class ExchangeConnector
      */
     public static function buildMarketName(string $base, string $quote): string
     {
-        return mb_strtoupper(sprintf('%s%s%s', $quote, static::DELIMITER, $base));
+        return Connector::buildMarketName($base, $quote);
     }
 
     /**
@@ -43,24 +51,16 @@ class ExchangeConnector
      */
     public static function splitMarketName(string $symbol): array
     {
-        [$quote, $base] = array_map('mb_strtoupper', explode(static::DELIMITER, $symbol));
-
-        return [$base, $quote];
+        return Connector::splitMarketName($symbol);
     }
 
     /**
      * @param string $exchangeUrl
      * @param Connection|null $connection
-     *
-     * @throws ConnectorException
      */
     public function __construct(string $exchangeUrl, ?Connection $connection = null)
     {
-        try {
-            $this->client = new Client(['base_uri' => $exchangeUrl]);
-        } catch (\InvalidArgumentException $e) {
-            throw new ConnectorException($e->getMessage());
-        }
+        $this->connector = new Connector($exchangeUrl);
 
         if (null !== $connection) {
             $this->with($connection);
@@ -68,465 +68,45 @@ class ExchangeConnector
     }
 
     /**
-     * @param CacheInterface $cache
+     * @deprecated inject in constructor instead
      *
-     * @return ExchangeConnector
-     */
-    public function setCache(CacheInterface $cache): self
-    {
-        $this->cache = $cache;
-
-        return $this;
-    }
-
-    /**
-     * @param int $ttl
-     * @param null|string $key
-     *
-     * @return ExchangeConnector
-     * @throws ConnectorException
-     */
-    public function cache(int $ttl, ?string $key = null): self
-    {
-        if (!$this->cache instanceof CacheInterface) {
-            throw new ConnectorException('Cache is not defined. Use setCache() first!');
-        }
-
-        $this->cacheTime = $ttl;
-        $this->cacheKey = $key;
-
-        return $this;
-    }
-
-    /**
-     * @param null|string $key
-     *
-     * @return ExchangeConnector
-     *
-     * @throws ConnectorException
-     */
-    public function cacheForever(?string $key = null): self
-    {
-        return $this->cache(-1, $key);
-    }
-
-    /**
      * @param Connection $connection
      *
      * @return ExchangeConnector
-     *
-     * @throws ConnectorException
      */
     public function with(Connection $connection): self
     {
-        $this->connection = ['id' => $this->request('post', 'auth', [], $connection->toArray())];
+        $this->connection = $connection;
 
         return $this;
-
     }
 
     /**
-     * @param int $depth
+     * @param $name
+     * @param $arguments
      *
-     * @return array
+     * @return array|mixed
      *
      * @throws ConnectorException
      */
-    public function allowedMarkets(int $depth = 10): array
+    public function __call($name, $arguments)
     {
-        return $this->request('get', 'public/allowed_markets', ['depth' => $depth]);
-    }
+        $exchangeApi = $this->getExchangeConnector();
 
-    /**
-     * @return array
-     *
-     * @throws ConnectorException
-     */
-    public function allowedSymbols(): array
-    {
-        return $this->request('get', 'public/allowed_symbols');
-    }
-
-    /**
-     * @param int $depth
-     *
-     * @return array
-     *
-     * @throws ConnectorException
-     */
-    public function markets(int $depth = 10): array
-    {
-        return $this->request('get', 'public/order_book', ['depth' => $depth]);
-    }
-
-    /**
-     * @param string $market
-     * @param int $depth
-     *
-     * @return array
-     *
-     * @throws ConnectorException
-     */
-    public function market(string $market, int $depth = 10): array
-    {
-        try {
-            return $this->request('get', sprintf('public/%s/order_book', $market), ['depth' => $depth]);
-        } catch (ConnectorException $exception) {
-            if (!$this->symbolExists($market)) {
-                throw new ConnectorException(sprintf('Market %s not exists', $market));
-            }
-
-            throw $exception;
-        }
-    }
-
-    /**
-     * @param string $name
-     *
-     * @return bool
-     *
-     * @throws ConnectorException
-     */
-    public function symbolExists(string $name): bool
-    {
-        $symbols = array_map('mb_strtoupper', array_column($this->symbols(), 'symbol'));
-        
-        return \in_array(mb_strtoupper($name), $symbols, true);
-    }
-    
-    /**
-     * @param string $asset
-     *
-     * @return bool
-     *
-     * @throws ConnectorException
-     */
-    public function assetExists(string $asset): bool
-    {
-        $symbols = array_map('mb_strtoupper', array_column($this->symbols(), 'symbol'));
-        $assets = array_merge(...array_map(
-            function (string $symbol) {
-                return explode(static::DELIMITER, $symbol);
-            },
-            $symbols
-        ));
-        
-        return \in_array(mb_strtoupper($asset), $assets, true);
-    }
-    
-    /**
-     * @return array
-     *
-     * @throws ConnectorException
-     */
-    public function symbols(): array
-    {
-        return $this->request('get', 'public/symbols');
-    }
-
-    /**
-     * @param string $symbol
-     * @param string $interval
-     * @param int $limit
-     * @return array
-     * @throws ConnectorException
-     */
-    public function candles(string $symbol, string $interval, int $limit): array
-    {
-        $query = [
-            'symbol' => $symbol,
-            'interval' => $interval,
-            'limit' => $limit
-        ];
-
-        return $this->request('get', 'public/klines', $query);
-    }
-
-    /**
-     * @return array
-     *
-     * @throws ConnectorException
-     */
-    public function wallet(): array
-    {
-        return $this->request('get', 'account/wallet');
-    }
-
-    /**
-     * @param int $limit
-     *
-     * @return WaitResponse|array
-     *
-     * @throws ConnectorException
-     */
-    public function orders(int $limit = 10)
-    {
-        return $this->request('get', 'account/history_orders/all', ['limit' => $limit]);
-    }
-    
-    /**
-     * @param string $symbol
-     * @param string|int $id
-     *
-     * @return array
-     *
-     * @throws ConnectorException
-     */
-    public function orderInfo(string $symbol, $id): array
-    {
-        try {
-            return $this->request('get', sprintf('account/%s/orderinfo', $symbol), ['orderId' => $id]);
-        } catch (ConnectorException $exception) {
-            if (!$this->symbolExists($symbol)) {
-                throw new ConnectorException(sprintf('Symbol %s not exists', $symbol));
-            }
-
-            throw $exception;
-        }
-    }
-
-    /**
-     * @param string $symbol
-     * @param int $limit
-     *
-     * @return array
-     *
-     * @throws ConnectorException
-     */
-    public function ordersBySymbol(string $symbol, int $limit = 10): array
-    {
-        try {
-            return $this->request('get', sprintf('account/%s/history_orders', $symbol), ['limit' => $limit]);
-        } catch (ConnectorException $exception) {
-            if (!$this->symbolExists($symbol)) {
-                throw new ConnectorException(sprintf('Symbol %s not exists', $symbol));
-            }
-
-            throw $exception;
-        }
-    }
-
-    /**
-     * @param string $base
-     * @param string $symbols
-     * @param int $limit
-     *
-     * @return array
-     *
-     * @throws ConnectorException
-     */
-    public function ordersList(string $base, string $symbols, int $limit = 10): array
-    {
-        return $this->request(
-            'get',
-            'account/history_orders_list',
-            ['base' => $base, 'symbols' => $symbols, 'limit' => $limit]
-        );
-    }
-
-    /**
-     * @param string $side
-     * @param string $symbol
-     * @param float $amount
-     * @param float $price
-     * @param float $qty
-     *
-     * @return string
-     *
-     * @throws ConnectorException
-     */
-    public function createOrder(
-        string $side,
-        string $symbol,
-        float $price,
-        ?float $qty = null,
-        ?float $amount = null
-    ): string {
-        if ((null !== $qty && null !== $amount) || (null === $qty && null === $amount)) {
-            throw new ConnectorException('You should specify only qty or amount');
+        if (!method_exists($exchangeApi, $name)) {
+            throw new ConnectorException(sprintf('Method %s not found in %s', $name, get_class($exchangeApi)));
         }
 
-        try {
-            return $this->request('post', sprintf('account/%s/%s', $symbol, $side), [
-                'amount' => $amount,
-                'price' => $price,
-                'qty' => $qty,
-            ]);
-        } catch (ConnectorException $exception) {
-            if (!$this->symbolExists($symbol)) {
-                throw new ConnectorException(sprintf('Symbol %s not exists', $symbol));
-            }
-
-            throw $exception;
-        }
+        return call_user_func_array([$exchangeApi, $name], $arguments);
     }
 
     /**
-     * @param string $symbol
-     *
-     * @return array
+     * @return Exchange
      *
      * @throws ConnectorException
      */
-    public function cancelOrder(string $symbol): array
+    private function getExchangeConnector(): Exchange
     {
-        try {
-            return $this->request('post', sprintf('account/%s/cancel', $symbol));
-        } catch (ConnectorException $exception) {
-            if (!$this->symbolExists($symbol)) {
-                throw new ConnectorException(sprintf('Symbol %s not exists', $symbol));
-            }
-
-            throw $exception;
-        }
-    }
-
-    /**
-     * @param string $symbol
-     *
-     * @return array
-     *
-     * @throws ConnectorException
-     */
-    public function openOrders(string $symbol): array
-    {
-        try {
-            return $this->request('get', sprintf('account/%s/open_orders', $symbol));
-        } catch (ConnectorException $exception) {
-            if (!$this->symbolExists($symbol)) {
-                throw new ConnectorException(sprintf('Symbol %s not exists', $symbol));
-            }
-
-            throw $exception;
-        }
-    }
-
-    /**
-     * @return array
-     *
-     * @throws ConnectorException
-     */
-    public function deposits(): array
-    {
-        return $this->request('get', 'account/deposits');
-    }
-
-    /**
-     * @return array
-     *
-     * @throws ConnectorException
-     */
-    public function withdrawals(): array
-    {
-        return $this->request('get', 'account/withdrowals');
-    }
-
-    /**
-     * @return bool
-     */
-    private function authenticated(): bool
-    {
-        return null !== $this->connection && isset($this->connection['id']);
-    }
-
-    /**
-     * !!!!REFACTOR ME PLEASE!!!!
-     *
-     * @param string $method
-     * @param string $endpoint
-     * @param array $data
-     * @param array $headers
-     *
-     * @return mixed
-     *
-     * @throws ConnectorException
-     */
-    private function request(string $method, string $endpoint, array $data = [], array $headers = [])
-    {
-        if ('auth' !== $endpoint && !$this->authenticated()) {
-            throw new ConnectorException('User not specified. Use with()');
-        }
-
-        /**
-         * @return mixed
-         *
-         * @throws \RuntimeException
-         */
-        $makeRequest = function () use ($method, $endpoint, $data, $headers) {
-            $headers = array_merge([], $headers, $this->connection ?? []);
-
-            $params = [];
-
-            $params['post' === mb_strtolower($method) ? 'form_params' : 'query'] = $data;
-            $params['headers'] = array_merge([
-                'Content-Type' => 'post' === mb_strtolower($method)
-                    ? 'application/x-www-form-urlencoded'
-                    : 'application/json'
-            ], $headers);
-
-            try {
-                $response = $this->client->request($method, $endpoint, $params)->getBody()->getContents();
-            } catch (ClientException | GuzzleException $exception) {
-                $response = $exception->getResponse();
-
-                if (!$response) {
-                    throw new ConnectorException('Request error: ' . $exception->getMessage());
-                }
-
-                $json = \json_decode($contents = $response->getBody()->getContents(), true);
-                $errorMessage = $json['error'];
-
-                if ($json['message'] ?? '') {
-                    $errorMessage .= ':' . $json['message'];
-                }
-
-                throw new ConnectorException($errorMessage ?? $exception->getMessage());
-            }
-
-            $json = \json_decode($response, true);
-            $result = $json['result'] ?? [];
-
-            if (!$result && ($json['message'] ?? '') === 'WAIT') {
-                return new WaitResponse();
-            }
-
-            return $result;
-        };
-
-        try {
-            if (null !== $this->cacheTime) {
-                $key = $this->cacheKey ?? sha1($method . $endpoint . json_encode($data) . json_encode($headers));
-                $response = $this->cached($key, $makeRequest, $this->cacheTime);
-
-                $this->cacheTime = null;
-                $this->cacheKey = null;
-
-                return $response;
-            }
-
-            return $makeRequest();
-        } catch (\Exception | \Throwable | InvalidArgumentException $e) {
-            throw new ConnectorException($e->getMessage());
-        }
-    }
-
-    /**
-     * @param string $key
-     * @param callable $callback
-     * @param int $ttl
-     *
-     * @return callable|mixed
-     *
-     * @throws InvalidArgumentException
-     */
-    private function cached(string $key, callable $callback, int $ttl)
-    {
-        if (!$this->cache->has($key)) {
-            $this->cache->set($key, $result = $callback(), $ttl >= 0 ? $ttl : null);
-
-            return $result;
-        }
-
-        return $this->cache->get($key);
+        return $this->connector->resolve($this->connection);
     }
 }

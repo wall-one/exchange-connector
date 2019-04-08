@@ -66,4 +66,36 @@ class Connection
 
         return new static($array['exchange'], $array['api_key'], $array['secret_key'], $array['customer_id'] ?? null);
     }
+
+    /**
+     * @return string
+     */
+    public function getApiKey(): string
+    {
+        return $this->apiKey;
+    }
+
+    /**
+     * @return string
+     */
+    public function getExchange(): string
+    {
+        return $this->exchange;
+    }
+
+    /**
+     * @return string
+     */
+    public function getSecretKey(): string
+    {
+        return $this->secretKey;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getCustomerId(): ?string
+    {
+        return $this->customerId;
+    }
 }
