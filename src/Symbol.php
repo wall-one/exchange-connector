@@ -42,4 +42,12 @@ class Symbol
     {
         return strtr($format, ['{base}' => $this->base, '{quote}' => $this->quote]);
     }
+
+    /**
+     * @return array
+     */
+    public function toArray(): array
+    {
+        return [$this->base, $this->quote];
+    }
 }

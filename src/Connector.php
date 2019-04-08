@@ -33,9 +33,7 @@ class Connector
      */
     public static function splitMarketName(string $symbol): array
     {
-        [$quote, $base] = array_map('mb_strtoupper', explode(static::DELIMITER, $symbol));
-
-        return [$base, $quote];
+        return Symbol::createFromStandard($symbol)->toArray();
     }
 
     /**
