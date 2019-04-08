@@ -21,7 +21,7 @@ class Connector
      */
     public static function buildMarketName(string $base, string $quote): string
     {
-        return mb_strtoupper(sprintf('%s%s%s', $quote, static::DELIMITER, $base));
+        return mb_strtoupper((new Symbol($base, $quote))->format('{quote}_{base}'));
     }
 
     /**

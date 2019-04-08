@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace MZNX\ExchangeConnector\Entity;
 
 use DateTime;
+use DateTimeInterface;
 use Exception;
 use MZNX\ExchangeConnector\Connector;
 use MZNX\ExchangeConnector\Exchange\Bittrex;
@@ -39,7 +40,7 @@ class Order implements ArrayConvertible
      */
     private $filled;
     /**
-     * @var DateTime
+     * @var DateTimeInterface
      */
     private $dateTime;
 
@@ -74,7 +75,7 @@ class Order implements ArrayConvertible
      * @param float $price
      * @param float $qty
      * @param float $filled
-     * @param DateTime $dateTime
+     * @param DateTimeInterface $dateTime
      */
     public function __construct(
         string $id,
@@ -84,7 +85,7 @@ class Order implements ArrayConvertible
         float $price,
         float $qty,
         float $filled,
-        DateTime $dateTime
+        DateTimeInterface $dateTime
     ) {
         $this->id = $id;
         $this->symbol = $symbol;

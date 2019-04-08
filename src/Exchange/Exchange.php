@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace MZNX\ExchangeConnector\Exchange;
 
 use MZNX\ExchangeConnector\Connection;
+use MZNX\ExchangeConnector\Symbol;
 use MZNX\ExchangeConnector\WaitResponse;
 
 interface Exchange
@@ -13,9 +14,9 @@ interface Exchange
      *
      * @param string $symbol
      *
-     * @return array
+     * @return Symbol
      */
-    public static function splitMarketName(string $symbol): array;
+    public static function splitMarketName(string $symbol): Symbol;
 
     /**
      * @param Connection $connection
@@ -39,13 +40,13 @@ interface Exchange
     /**
      * @deprecated
      *
-     * @param string $symbol
+     * @param Symbol $symbol
      * @param string $interval
      * @param int $limit
      *
      * @return array
      */
-    public function candles(string $symbol, string $interval, int $limit): array;
+    public function candles(Symbol $symbol, string $interval, int $limit): array;
 
     /**
      * @return array
@@ -60,44 +61,44 @@ interface Exchange
     public function orders(int $limit = 10);
 
     /**
-     * @param string $symbol
+     * @param Symbol $symbol
      * @param $id
      *
      * @return array
      */
-    public function orderInfo(string $symbol, $id): array;
+    public function orderInfo(Symbol $symbol, $id): array;
 
     /**
-     * @param string $symbol
+     * @param Symbol $symbol
      * @param int $limit
      *
      * @return array
      */
-    public function ordersBySymbol(string $symbol, int $limit = 10): array;
+    public function ordersBySymbol(Symbol $symbol, int $limit = 10): array;
 
     /**
      * @param string $side
-     * @param string $symbol
+     * @param Symbol $symbol
      * @param float $price
      * @param float $qty
      *
      * @return string
      */
-    public function createOrder(string $side, string $symbol, float $price, float $qty): string;
+    public function createOrder(string $side, Symbol $symbol, float $price, float $qty): string;
 
     /**
-     * @param string|int $symbolOrId
+     * @param Symbol|int $symbolOrId
      *
      * @return bool
      */
     public function cancelOrder($symbolOrId): bool;
 
     /**
-     * @param string $symbol
+     * @param Symbol $symbol
      *
      * @return array
      */
-    public function openOrders(string $symbol): array;
+    public function openOrders(Symbol $symbol): array;
 
     /**
      * @return array
@@ -110,12 +111,12 @@ interface Exchange
     public function withdrawals(): array;
 
     /**
-     * @param string $market
+     * @param Symbol $symbol
      * @param int $depth
      *
      * @return array
      */
-    public function market(string $market, int $depth = 10): array;
+    public function market(Symbol $symbol, int $depth = 10): array;
 
     /**
      * @return array

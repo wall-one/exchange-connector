@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace MZNX\ExchangeConnector\Entity;
 
 use DateTime;
+use DateTimeInterface;
 use Exception;
 
 class Deposit implements ArrayConvertible
@@ -33,7 +34,7 @@ class Deposit implements ArrayConvertible
      */
     private $status;
     /**
-     * @var DateTime
+     * @var DateTimeInterface
      */
     private $insertTime;
 
@@ -64,7 +65,7 @@ class Deposit implements ArrayConvertible
      * @param string $addressTag
      * @param string $txId
      * @param string $status
-     * @param DateTime $insertTime
+     * @param DateTimeInterface $insertTime
      */
     public function __construct(
         float $amount,
@@ -73,7 +74,7 @@ class Deposit implements ArrayConvertible
         string $addressTag,
         string $txId,
         string $status,
-        DateTime $insertTime
+        DateTimeInterface $insertTime
     ) {
         $this->amount = $amount;
         $this->asset = $asset;

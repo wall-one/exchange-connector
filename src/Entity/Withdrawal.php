@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace MZNX\ExchangeConnector\Entity;
 
 use DateTime;
+use DateTimeInterface;
 use Exception;
 
 class Withdrawal implements ArrayConvertible
@@ -29,7 +30,7 @@ class Withdrawal implements ArrayConvertible
      */
     private $txId;
     /**
-     * @var DateTime
+     * @var DateTimeInterface
      */
     private $applyTime;
     /**
@@ -71,7 +72,7 @@ class Withdrawal implements ArrayConvertible
      * @param string $addressTag
      * @param string $asset
      * @param string $txId
-     * @param DateTime|null $applyTime
+     * @param DateTimeInterface|null $applyTime
      * @param string $status
      */
     public function __construct(
@@ -80,7 +81,7 @@ class Withdrawal implements ArrayConvertible
         string $addressTag,
         string $asset,
         string $txId,
-        ?DateTime $applyTime,
+        ?DateTimeInterface $applyTime,
         string $status
     ) {
         $this->amount = $amount;

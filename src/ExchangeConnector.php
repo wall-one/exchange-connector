@@ -21,7 +21,7 @@ use MZNX\ExchangeConnector\Exchange\Exchange;
  * @method array openOrders(string $symbol)
  * @method array deposits()
  * @method array withdrawals()
- * @method array market(string $market, int $depth = 10)
+ * @method array market(string $symbol, int $depth = 10)
  * @method array symbols()
  */
 class ExchangeConnector

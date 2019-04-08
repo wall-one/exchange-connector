@@ -14,6 +14,7 @@ use MZNX\ExchangeConnector\Entity\OrderBookEntry;
 use MZNX\ExchangeConnector\Entity\Symbol;
 use MZNX\ExchangeConnector\Entity\Withdrawal;
 use MZNX\ExchangeConnector\Connection;
+use MZNX\ExchangeConnector\Symbol as ExchangeSymbol;
 use Throwable;
 
 class Bittrex implements Exchange
@@ -31,11 +32,13 @@ class Bittrex implements Exchange
      *
      * @param string $symbol
      *
-     * @return array
+     * @return ExchangeSymbol
      */
-    public static function splitMarketName(string $symbol): array
+    public static function splitMarketName(string $symbol): ExchangeSymbol
     {
-        return array_map('mb_strtoupper', explode(static::DELIMITER, $symbol));
+        [$base, $quote] = explode(static::DELIMITER, $symbol);
+
+        return new ExchangeSymbol($base, $quote);
     }
 
     /**
@@ -81,7 +84,7 @@ class Bittrex implements Exchange
     /**
      * @deprecated don't use this method
      *
-     * @param string $symbol
+     * @param ExchangeSymbol $symbol
      * @param string $interval
      * @param int $limit
      *
@@ -89,7 +92,7 @@ class Bittrex implements Exchange
      *
      * @throws ConnectorException
      */
-    public function candles(string $symbol, string $interval, int $limit): array
+    public function candles(ExchangeSymbol $symbol, string $interval, int $limit): array
     {
         throw new ConnectorException('Not implemented yet');
     }
@@ -134,7 +137,7 @@ class Bittrex implements Exchange
     }
 
     /**
-     * @param string $symbol
+     * @param ExchangeSymbol $symbol
      * @param $id
      *
      * @return array
@@ -142,7 +145,7 @@ class Bittrex implements Exchange
      * @throws ConnectorException
      * @throws Exception
      */
-    public function orderInfo(string $symbol, $id): array
+    public function orderInfo(ExchangeSymbol $symbol, $id): array
     {
         $order = static::wrapRequest($this->client->getOrder($id));
 
@@ -150,19 +153,19 @@ class Bittrex implements Exchange
     }
 
     /**
-     * @param string $symbol
+     * @param ExchangeSymbol $symbol
      * @param int|null $limit
      *
      * @return array
      *
      * @throws ConnectorException
      */
-    public function ordersBySymbol(string $symbol, ?int $limit = 10): array
+    public function ordersBySymbol(ExchangeSymbol $symbol, ?int $limit = 10): array
     {
         $orders = array_filter(
             $this->orders(null),
             static function (array $order) use ($symbol) {
-                return $order['symbol'] === $symbol;
+                return $order['symbol'] === $symbol->format(ExchangeSymbol::BITTREX_FORMAT);
             }
         );
 
@@ -171,7 +174,7 @@ class Bittrex implements Exchange
 
     /**
      * @param string $side
-     * @param string $symbol
+     * @param ExchangeSymbol $symbol
      * @param float $price
      * @param float $qty
      *
@@ -179,7 +182,7 @@ class Bittrex implements Exchange
      *
      * @throws ConnectorException
      */
-    public function createOrder(string $side, string $symbol, float $price, float $qty): string
+    public function createOrder(string $side, ExchangeSymbol $symbol, float $price, float $qty): string
     {
         if (!in_array(mb_strtolower($side), ['buy', 'sell'], true)) {
             throw new ConnectorException('Unknown side ' . $side);
@@ -187,7 +190,9 @@ class Bittrex implements Exchange
 
         $method = mb_strtolower($side) . 'Limit';
 
-        return static::wrapRequest($this->client->$method($symbol, $qty, $price))['uuid'];
+        return static::wrapRequest(
+            $this->client->$method($symbol->format(ExchangeSymbol::BITTREX_FORMAT), $qty, $price)
+        )['uuid'];
     }
 
     /**
@@ -198,6 +203,16 @@ class Bittrex implements Exchange
     public function cancelOrder($symbolOrId): bool
     {
         try {
+            if ($symbolOrId instanceof ExchangeSymbol) {
+                $orders = $this->openOrders($symbolOrId);
+
+                foreach ($orders as $order) {
+                    $this->cancelOrder($order['id']);
+                }
+
+                return true;
+            }
+
             static::wrapRequest($this->client->cancel($symbolOrId));
 
             return true;
@@ -207,19 +222,19 @@ class Bittrex implements Exchange
     }
 
     /**
-     * @param string $symbol
+     * @param ExchangeSymbol $symbol
      *
      * @return array
      *
      * @throws ConnectorException
      */
-    public function openOrders(string $symbol): array
+    public function openOrders(ExchangeSymbol $symbol): array
     {
         return array_map(
             static function (array $order) {
                 return OpenOrder::createFromBittrexResponse($order)->toArray();
             },
-            static::wrapRequest($this->client->getOpenOrders($symbol))
+            static::wrapRequest($this->client->getOpenOrders($symbol->format(ExchangeSymbol::BITTREX_FORMAT)))
         );
     }
 
@@ -254,19 +269,19 @@ class Bittrex implements Exchange
     }
 
     /**
-     * @param string $market
+     * @param ExchangeSymbol $symbol
      * @param int $depth
      *
      * @return array
      *
      * @throws ConnectorException
      */
-    public function market(string $market, int $depth = 10): array
+    public function market(ExchangeSymbol $symbol, int $depth = 10): array
     {
-        $orderBook = static::wrapRequest($this->client->getOrderBook($market));
+        $orderBook = static::wrapRequest($this->client->getOrderBook($symbol->format(ExchangeSymbol::BITTREX_FORMAT)));
 
         return [
-            'symbol' => $market,
+            'symbol' => $symbol->format(ExchangeSymbol::STANDARD_FORMAT),
             'bids' => array_slice(array_map(
                 static function (array $entry) {
                     return OrderBookEntry::createFromBittrexResponse($entry)->toArray();

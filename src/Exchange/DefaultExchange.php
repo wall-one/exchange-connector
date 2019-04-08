@@ -10,14 +10,13 @@ use InvalidArgumentException;
 use function json_decode;
 use MZNX\ExchangeConnector\Connection;
 use MZNX\ExchangeConnector\ConnectorException;
+use MZNX\ExchangeConnector\Symbol;
 use MZNX\ExchangeConnector\WaitResponse;
 use Psr\Http\Message\ResponseInterface;
 use Throwable;
 
 class DefaultExchange implements Exchange
 {
-    private const DELIMITER = '_';
-
     /**
      * @var array
      */
@@ -32,13 +31,11 @@ class DefaultExchange implements Exchange
      *
      * @param string $symbol
      *
-     * @return array
+     * @return Symbol
      */
-    public static function splitMarketName(string $symbol): array
+    public static function splitMarketName(string $symbol): Symbol
     {
-        [$quote, $base] = array_map('mb_strtoupper', explode(static::DELIMITER, $symbol));
-
-        return [$base, $quote];
+        return Symbol::createFromStandard($symbol);
     }
 
     /**
@@ -97,16 +94,16 @@ class DefaultExchange implements Exchange
     /**
      * @deprecated Will be removed in 2.0. Use nomics instead
      *
-     * @param string $symbol
+     * @param Symbol $symbol
      * @param string $interval
      * @param int $limit
      * @return array
      * @throws ConnectorException
      */
-    public function candles(string $symbol, string $interval, int $limit): array
+    public function candles(Symbol $symbol, string $interval, int $limit): array
     {
         $query = [
-            'symbol' => $symbol,
+            'symbol' => $symbol->format(Symbol::STANDARD_FORMAT),
             'interval' => $interval,
             'limit' => $limit
         ];
@@ -137,34 +134,40 @@ class DefaultExchange implements Exchange
     }
 
     /**
-     * @param string $symbol
+     * @param Symbol $symbol
      * @param string|int $id
      *
      * @return array
      *
      * @throws ConnectorException
      */
-    public function orderInfo(string $symbol, $id): array
+    public function orderInfo(Symbol $symbol, $id): array
     {
-        return $this->request('get', sprintf('account/%s/orderinfo', $symbol), ['orderId' => $id]);
+        return $this->request('get', sprintf(
+            'account/%s/orderinfo',
+            $symbol->format(Symbol::STANDARD_FORMAT)
+        ), ['orderId' => $id]);
     }
 
     /**
-     * @param string $symbol
+     * @param Symbol $symbol
      * @param int $limit
      *
      * @return array
      *
      * @throws ConnectorException
      */
-    public function ordersBySymbol(string $symbol, int $limit = 10): array
+    public function ordersBySymbol(Symbol $symbol, int $limit = 10): array
     {
-        return $this->request('get', sprintf('account/%s/history_orders', $symbol), ['limit' => $limit]);
+        return $this->request('get', sprintf(
+            'account/%s/history_orders',
+            $symbol->format(Symbol::STANDARD_FORMAT)
+        ), ['limit' => $limit]);
     }
 
     /**
      * @param string $side
-     * @param string $symbol
+     * @param Symbol $symbol
      * @param float $price
      * @param float $qty
      *
@@ -174,11 +177,15 @@ class DefaultExchange implements Exchange
      */
     public function createOrder(
         string $side,
-        string $symbol,
+        Symbol $symbol,
         float $price,
         float $qty
     ): string {
-        return $this->request('post', sprintf('account/%s/%s', $symbol, $side), [
+        return $this->request('post', sprintf(
+            'account/%s/%s',
+            $symbol->format(Symbol::STANDARD_FORMAT),
+            $side
+        ), [
             'price' => $price,
             'qty' => $qty,
         ]);
@@ -199,15 +206,15 @@ class DefaultExchange implements Exchange
     }
 
     /**
-     * @param string $symbol
+     * @param Symbol $symbol
      *
      * @return array
      *
      * @throws ConnectorException
      */
-    public function openOrders(string $symbol): array
+    public function openOrders(Symbol $symbol): array
     {
-        return $this->request('get', sprintf('account/%s/open_orders', $symbol));
+        return $this->request('get', sprintf('account/%s/open_orders', $symbol->format(Symbol::STANDARD_FORMAT)));
     }
 
     /**
@@ -231,16 +238,19 @@ class DefaultExchange implements Exchange
     }
 
     /**
-     * @param string $market
+     * @param Symbol $symbol
      * @param int $depth
      *
      * @return array
      *
      * @throws ConnectorException
      */
-    public function market(string $market, int $depth = 10): array
+    public function market(Symbol $symbol, int $depth = 10): array
     {
-        return $this->request('get', sprintf('public/%s/order_book', $market), ['depth' => $depth]);
+        return $this->request('get', sprintf(
+            'public/%s/order_book',
+            $symbol->format(Symbol::STANDARD_FORMAT)
+        ), ['depth' => $depth]);
     }
 
     /**
