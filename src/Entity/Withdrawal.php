@@ -47,12 +47,12 @@ class Withdrawal implements ArrayConvertible
      */
     public static function createFromBittrexResponse(array $response): self
     {
-        $status = 'Completed';
+        $status = 'success';
 
         if ($response['Opened']) {
-            $status = 'Pending';
+            $status = 'pending';
         } elseif ($response['Canceled']) {
-            $status = 'Canceled';
+            $status = 'canceled';
         }
 
         return new static(
@@ -62,6 +62,42 @@ class Withdrawal implements ArrayConvertible
             mb_strtolower($response['Currency']),
             $response['TxId'],
             $response['Opened'] ? new DateTime($response['Opened']) : null,
+            $status
+        );
+    }
+
+    /**
+     * @param array $response
+     *
+     * @return Withdrawal
+     */
+    public static function createFromBinanceResponse(array $response): self
+    {
+        switch ($response['status']) {
+            case 1:
+                $status = 'canceled';
+                break;
+
+            case 5:
+                $status = 'failed';
+                break;
+
+            case 6:
+                $status = 'success';
+                break;
+
+            default:
+                $status = 'pending';
+                break;
+        }
+
+        return new static(
+            (float)$response['amount'],
+            mb_strtolower($response['asset']),
+            $response['address'],
+            $response['addressTag'],
+            $response['txId'],
+            DateTime::createFromFormat('U', (string)round($response['applyTime'] / 1000)),
             $status
         );
     }

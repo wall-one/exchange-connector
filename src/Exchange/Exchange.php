@@ -10,8 +10,6 @@ use MZNX\ExchangeConnector\WaitResponse;
 interface Exchange
 {
     /**
-     * Returns array [$base, $quote]
-     *
      * @param string $symbol
      *
      * @return Symbol

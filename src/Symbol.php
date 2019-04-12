@@ -7,6 +7,7 @@ class Symbol
 {
     public const STANDARD_FORMAT = '{quote}_{base}';
     public const BITTREX_FORMAT = '{base}-{quote}';
+    public const BINANCE_FORMAT = '{quote}{base}';
 
     private $base;
     private $quote;

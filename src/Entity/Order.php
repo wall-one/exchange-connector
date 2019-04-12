@@ -8,6 +8,7 @@ use DateTimeInterface;
 use Exception;
 use MZNX\ExchangeConnector\Connector;
 use MZNX\ExchangeConnector\Exchange\Bittrex;
+use MZNX\ExchangeConnector\Symbol as ExchangeSymbol;
 
 class Order implements ArrayConvertible
 {
@@ -53,17 +54,39 @@ class Order implements ArrayConvertible
      */
     public static function createFromBittrexResponse(array $response): self
     {
-        [$base, $quote] = Bittrex::splitMarketName($response['Exchange']);
+        $symbol = Bittrex::splitMarketName($response['Exchange']);
 
         return new static(
             $response['OrderUuid'],
-            Connector::buildMarketName($base, $quote),
-            mb_strtoupper($response['OrderType']),
-            mb_strtoupper(explode('_', $response['OrderType'])[1]),
+            Connector::buildMarketName(...$symbol->toArray()),
+            mb_strtoupper(explode('_', $response['OrderType'] ?? $response['Type'])[0]),
+            mb_strtoupper(explode('_', $response['OrderType'] ?? $response['Type'])[1]),
             (float)$response['Price'],
             (float)$response['Quantity'],
             (float)$response['Quantity'] - (float)$response['QuantityRemaining'],
-            new DateTime($response['TimeStamp'])
+            new DateTime($response['TimeStamp'] ?? $response['Closed'])
+        );
+    }
+
+    /**
+     * @param array $response
+     * @param ExchangeSymbol $symbol
+     *
+     * @return Order
+     */
+    public static function createFromBinanceResponse(array $response, ExchangeSymbol $symbol): self
+    {
+        return new static(
+            (string)$response['orderId'],
+            Connector::buildMarketName(...$symbol->toArray()),
+            mb_strtoupper($response['type']),
+            mb_strtoupper($response['side']),
+            (float)$response['price'],
+            (float)($response['origQty'] ?? $response['qty']),
+            array_key_exists('qty', $response)
+                ? (float)$response['qty']
+                : (float)$response['executedQty'],
+            DateTime::createFromFormat('U',(string)round($response['time'] / 1000))
         );
     }
 

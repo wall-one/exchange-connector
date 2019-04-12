@@ -52,7 +52,7 @@ class Symbol implements ArrayConvertible
      */
     public static function createFromBittrexResponse(array $response): self
     {
-        [$base, $quote] = Bittrex::splitMarketName($response['MarketName']);
+        [$base, $quote] = Bittrex::splitMarketName($response['MarketName'])->toArray();
 
         return new static(
             $response['MarketName'],
@@ -63,6 +63,44 @@ class Symbol implements ArrayConvertible
             8,
             0,
             (float)$response['MinTradeSize']
+        );
+    }
+
+    /**
+     * @param array $response
+     *
+     * @return Symbol
+     */
+    public static function createFromBinanceResponse(array $response): self
+    {
+        $step = null;
+        $minQty = null;
+        $minAmount = null;
+
+        foreach ($response['filters'] as $filter) {
+            if ($filter['filterType'] === 'LOT_SIZE') {
+                $minQty = (float)$filter['minQty'];
+            }
+
+            if ($filter['filterType'] === 'PRICE_FILTER') {
+                $step = (float)$filter['tickSize'];
+            }
+
+            if ($filter['filterType'] === 'MIN_NOTIONAL') {
+                $minAmount = (float)$filter['minNotional'];
+            }
+        }
+
+        return new static(
+            $response['symbol'],
+            Connector::buildMarketName($response['quoteAsset'], $response['baseAsset']),
+            $response['quoteAsset'],
+            $response['baseAsset'],
+            $response['quotePrecision'],
+            $response['baseAssetPrecision'],
+            $step ?? 0.,
+            $minQty ?? 0.001,
+            $minAmount ?? 0.001
         );
     }
 

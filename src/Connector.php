@@ -4,13 +4,12 @@ declare(strict_types=1);
 namespace MZNX\ExchangeConnector;
 
 use MZNX\ExchangeConnector\Exchange\Bittrex;
+use MZNX\ExchangeConnector\Exchange\Binance;
 use MZNX\ExchangeConnector\Exchange\DefaultExchange;
 use MZNX\ExchangeConnector\Exchange\Exchange;
 
 class Connector
 {
-    public const DELIMITER = '_';
-
     private $connectorUrl;
 
     /**
@@ -56,6 +55,9 @@ class Connector
         switch (mb_strtolower($connection->getExchange())) {
             case 'bittrex':
                 return new Bittrex($connection);
+
+            case 'binance':
+                return new Binance($connection);
 
             default:
                 return new DefaultExchange($this->connectorUrl, $connection);

@@ -28,8 +28,6 @@ class Bittrex implements Exchange
     private $client;
 
     /**
-     * Returns array [$base, $quote]
-     *
      * @param string $symbol
      *
      * @return ExchangeSymbol
@@ -165,7 +163,7 @@ class Bittrex implements Exchange
         $orders = array_filter(
             $this->orders(null),
             static function (array $order) use ($symbol) {
-                return $order['symbol'] === $symbol->format(ExchangeSymbol::BITTREX_FORMAT);
+                return $order['symbol'] === $symbol->format(ExchangeSymbol::STANDARD_FORMAT);
             }
         );
 

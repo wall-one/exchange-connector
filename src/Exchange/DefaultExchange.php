@@ -27,8 +27,6 @@ class DefaultExchange implements Exchange
     private $client;
 
     /**
-     * Returns array [$base, $quote]
-     *
      * @param string $symbol
      *
      * @return Symbol

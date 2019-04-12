@@ -59,6 +59,24 @@ class Deposit implements ArrayConvertible
     }
 
     /**
+     * @param array $response
+     *
+     * @return Deposit
+     */
+    public static function createFromBinanceResponse(array $response): self
+    {
+        return new static(
+            (float)$response['amount'],
+            mb_strtolower($response['asset']),
+            $response['address'],
+            $response['addressTag'],
+            $response['txId'],
+            $response['status'] === 1 ? 'success' : 'pending',
+            DateTime::createFromFormat('U', (string)round($response['insertTime'] / 1000))
+        );
+    }
+
+    /**
      * @param float $amount
      * @param string $asset
      * @param string $address
