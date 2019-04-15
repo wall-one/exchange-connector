@@ -1,3 +1,5 @@
 vendor
 composer.lock
 .idea
+test/*/ca.pem
+test/*/config.php

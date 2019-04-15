@@ -1,0 +1,13 @@
+<?php
+declare(strict_types=1);
+
+use MZNX\ExchangeConnector\Connection;
+use MZNX\ExchangeConnector\Connector;
+
+$connector = new Connector('');
+
+return $connector->resolve(new Connection(
+    'binance',
+    'API_KEY',
+    'API_SECRET'
+));
