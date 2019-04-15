@@ -7,6 +7,7 @@ use Binance\API;
 use Exception;
 use MZNX\ExchangeConnector\Connection;
 use MZNX\ExchangeConnector\ConnectorException;
+use MZNX\ExchangeConnector\Entity\Candle;
 use MZNX\ExchangeConnector\Entity\Deposit;
 use MZNX\ExchangeConnector\Entity\OpenOrder;
 use MZNX\ExchangeConnector\Entity\Order;
@@ -89,7 +90,14 @@ class Binance implements Exchange
     public function candles(Symbol $symbol, string $interval, int $limit): array
     {
         try {
-            return $this->client->candlesticks($symbol->format(Symbol::BINANCE_FORMAT), $interval);
+            return array_values(
+                array_map(
+                    static function (array $candle) {
+                        return Candle::createFromBinanceResponse($candle)->toArray();
+                    },
+                    $this->client->candlesticks($symbol->format(Symbol::BINANCE_FORMAT), $interval)
+                )
+            );
         } catch (Exception $e) {
             throw new ConnectorException($e->getMessage(), $e->getCode(), $e);
         }
