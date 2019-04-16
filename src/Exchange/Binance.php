@@ -5,6 +5,7 @@ namespace MZNX\ExchangeConnector\Exchange;
 
 use Binance\API;
 use Exception;
+use MZNX\ExchangeConnector\BackwardCompatibilityTrait;
 use MZNX\ExchangeConnector\Connection;
 use MZNX\ExchangeConnector\ConnectorException;
 use MZNX\ExchangeConnector\Entity\Candle;
@@ -21,6 +22,8 @@ use Throwable;
 
 class Binance implements Exchange
 {
+    use BackwardCompatibilityTrait;
+
     private $connection;
     /** @var API */
     private $client;

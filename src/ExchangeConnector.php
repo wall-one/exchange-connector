@@ -9,6 +9,10 @@ use MZNX\ExchangeConnector\Exchange\Exchange;
  * @deprecated Will be removed in 2.0. Use MZNX\ExchangeConnector\Connector instead
  * @see Connector
  *
+ * @method ExchangeConnector cache(int $ttl)
+ * @method bool symbolExists(Symbol $symbol)
+ * @method bool assetExists(string $asset)
+ *
  * @method string auth(Connection $connection)
  * @method bool authenticated()
  * @method array candles(Symbol $symbol, string $interval, int $limit)

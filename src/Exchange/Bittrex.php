@@ -6,6 +6,7 @@ namespace MZNX\ExchangeConnector\Exchange;
 use codenixsv\Bittrex\BittrexManager;
 use codenixsv\Bittrex\Clients\BittrexClient;
 use Exception;
+use MZNX\ExchangeConnector\BackwardCompatibilityTrait;
 use MZNX\ExchangeConnector\ConnectorException;
 use MZNX\ExchangeConnector\Entity\Deposit;
 use MZNX\ExchangeConnector\Entity\OpenOrder;
@@ -19,6 +20,8 @@ use Throwable;
 
 class Bittrex implements Exchange
 {
+    use BackwardCompatibilityTrait;
+
     private const DELIMITER = '-';
     /**
      * @var array
