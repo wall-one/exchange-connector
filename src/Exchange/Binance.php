@@ -17,6 +17,7 @@ use MZNX\ExchangeConnector\Entity\Withdrawal;
 use MZNX\ExchangeConnector\Symbol;
 use MZNX\ExchangeConnector\WaitResponse;
 use RuntimeException;
+use Throwable;
 
 class Binance implements Exchange
 {
@@ -111,7 +112,7 @@ class Binance implements Exchange
     public function wallet(): array
     {
         try {
-            $balances = $this->client->balances();
+            $balances = static::wrapRequest($this->client->balances());
         } catch (Exception $e) {
             throw new ConnectorException($e->getMessage(), $e->getCode(), $e);
         }
@@ -185,7 +186,7 @@ class Binance implements Exchange
     public function orderInfo(Symbol $symbol, $id): array
     {
         try {
-            $order = $this->client->orderStatus($symbol->format(Symbol::BINANCE_FORMAT), $id);
+            $order = static::wrapRequest($this->client->orderStatus($symbol->format(Symbol::BINANCE_FORMAT), $id));
         } catch (Exception $e) {
             throw new ConnectorException($e->getMessage(), $e->getCode(), $e);
         }
@@ -204,7 +205,7 @@ class Binance implements Exchange
     public function ordersBySymbol(Symbol $symbol, int $limit = 10): array
     {
         try {
-            $history = $this->client->orders($symbol->format(Symbol::BINANCE_FORMAT), 100, $limit);
+            $history = static::wrapRequest($this->client->orders($symbol->format(Symbol::BINANCE_FORMAT), 100, $limit));
         } catch (Exception $e) {
             throw new ConnectorException($e->getMessage(), $e->getCode(), $e);
         }
@@ -236,10 +237,15 @@ class Binance implements Exchange
     public function createOrder(string $side, Symbol $symbol, float $price, float $qty): string
     {
         try {
-            $placedOrder = $this->client->buy($symbol->format(Symbol::BINANCE_FORMAT), $qty, $price);
+            $method = strtolower($side);
 
-            return $placedOrder['orderId'];
-        } catch (Exception $e) {
+            $placedOrder = static::wrapRequest($this->client->$method($symbol->format(Symbol::BINANCE_FORMAT), $qty, $price));
+
+            if (!array_key_exists('orderId', $placedOrder)) {
+            }
+
+            return (string)$placedOrder['orderId'];
+        } catch (Throwable $e) {
             throw new ConnectorException($e->getMessage(), $e->getCode(), $e);
         }
     }
@@ -254,7 +260,7 @@ class Binance implements Exchange
         try {
             if ($symbolOrId instanceof Symbol) {
                 foreach ($this->openOrders($symbolOrId) as $order) {
-                    $this->client->cancel($symbolOrId->format(Symbol::BINANCE_FORMAT), $order['id']);
+                    static::wrapRequest($this->client->cancel($symbolOrId->format(Symbol::BINANCE_FORMAT), $order['id']));
                 }
 
                 return true;
@@ -277,7 +283,7 @@ class Binance implements Exchange
     public function openOrders(Symbol $symbol): array
     {
         try {
-            $orders = $this->client->openOrders($symbol->format(Symbol::BINANCE_FORMAT));
+            $orders = static::wrapRequest($this->client->openOrders($symbol->format(Symbol::BINANCE_FORMAT)));
         } catch (Exception $e) {
             throw new ConnectorException($e->getMessage(), $e->getCode(), $e);
         }
@@ -298,7 +304,7 @@ class Binance implements Exchange
     public function deposits(): array
     {
         try {
-            $history = $this->client->depositHistory();
+            $history = static::wrapRequest($this->client->depositHistory());
         } catch (Exception $e) {
             throw new ConnectorException($e->getMessage(), $e->getCode(), $e);
         }
@@ -319,7 +325,7 @@ class Binance implements Exchange
     public function withdrawals(): array
     {
         try {
-            $history = $this->client->withdrawHistory();
+            $history = static::wrapRequest($this->client->withdrawHistory());
         } catch (Exception $e) {
             throw new ConnectorException($e->getMessage(), $e->getCode(), $e);
         }
@@ -343,7 +349,7 @@ class Binance implements Exchange
     public function market(Symbol $symbol, int $depth = 10): array
     {
         try {
-            $orderBook = $this->client->depth($symbol->format(Symbol::BINANCE_FORMAT), $depth);
+            $orderBook = static::wrapRequest($this->client->depth($symbol->format(Symbol::BINANCE_FORMAT), $depth));
         } catch (Exception $e) {
             throw new ConnectorException($e->getMessage(), $e->getCode(), $e);
         }
@@ -375,7 +381,7 @@ class Binance implements Exchange
     public function symbols(): array
     {
         try {
-            $exchangeInfo = $this->client->exchangeInfo();
+            $exchangeInfo = static::wrapRequest($this->client->exchangeInfo());
         } catch (Exception $e) {
             throw new ConnectorException($e->getMessage(), $e->getCode(), $e);
         }
@@ -386,5 +392,21 @@ class Binance implements Exchange
             },
             $exchangeInfo['symbols']
         );
+    }
+
+    /**
+     * @param $data
+     *
+     * @return mixed
+     *
+     * @throws RuntimeException
+     */
+    private static function wrapRequest($data)
+    {
+        if (isset($data['msg'])) {
+            throw new RuntimeException($data['msg']);
+        }
+
+        return $data;
     }
 }

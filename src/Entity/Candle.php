@@ -50,6 +50,11 @@ class Candle implements ArrayConvertible
      */
     private $takerBuyVolume;
 
+    /**
+     * @param array $response
+     *
+     * @return Candle
+     */
     public static function createFromBinanceResponse(array $response): self
     {
         return new static(
@@ -67,6 +72,19 @@ class Candle implements ArrayConvertible
         );
     }
 
+    /**
+     * @param int $openTime
+     * @param int $closeTime
+     * @param float $open
+     * @param float $high
+     * @param float $low
+     * @param float $close
+     * @param float $volume
+     * @param float $assetVolume
+     * @param int $trades
+     * @param float $assetBuyVolume
+     * @param float $takerBuyVolume
+     */
     public function __construct(
         int $openTime,
         int $closeTime,
@@ -93,6 +111,9 @@ class Candle implements ArrayConvertible
         $this->takerBuyVolume = $takerBuyVolume;
     }
 
+    /**
+     * @return array
+     */
     public function toArray(): array
     {
         return [

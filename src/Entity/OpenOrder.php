@@ -19,7 +19,7 @@ class OpenOrder extends Order
      */
     public static function createFromBittrexResponse(array $response): Order
     {
-        [$base, $quote] = Bittrex::splitMarketName($response['Exchange']);
+        [$base, $quote] = Bittrex::splitMarketName($response['Exchange'])->toArray();
 
         return new static(
             $response['OrderUuid'],
