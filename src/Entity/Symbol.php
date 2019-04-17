@@ -109,8 +109,8 @@ class Symbol implements ArrayConvertible
      * @param string $symbol
      * @param string $base
      * @param string $quote
-     * @param float $basePrecision
-     * @param float $quotePrecision
+     * @param int $basePrecision
+     * @param int $quotePrecision
      * @param float $step
      * @param float $minQty
      * @param float $minAmount
@@ -120,8 +120,8 @@ class Symbol implements ArrayConvertible
         string $symbol,
         string $base,
         string $quote,
-        float $basePrecision,
-        float $quotePrecision,
+        int $basePrecision,
+        int $quotePrecision,
         float $step,
         float $minQty,
         float $minAmount = 0.
