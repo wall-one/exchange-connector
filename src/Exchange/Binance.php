@@ -67,7 +67,34 @@ class Binance implements Exchange
      */
     public function with(Connection $connection): Exchange
     {
-        $this->client = new API($connection->getApiKey(), $connection->getSecretKey());
+        /*
+         * I'm to lazy to make proxy class so I'll use anonymous class :)
+         * Maybe I'll fix it later
+         */
+        $this->client = new class($connection->getApiKey(), $connection->getSecretKey())
+        {
+            private $client;
+
+            public function __construct(string $key, string $secret)
+            {
+                $this->client = new class($key, $secret) extends API {
+                    protected $caOverride = true;
+                };
+            }
+
+            public function __call($name, $arguments)
+            {
+                if (!method_exists($this->client, $name)) {
+                    throw new RuntimeException(sprintf('Undefined method %s::%s', get_class($this->client), $name));
+                }
+
+                ob_start();
+                $result = call_user_func_array([$this->client, $name], $arguments);
+                ob_end_clean();
+
+                return $result;
+            }
+        };
 
         return $this;
     }
