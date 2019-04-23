@@ -119,6 +119,26 @@ class Bittrex implements Exchange
     }
 
     /**
+     * @return array
+     *
+     * @throws ConnectorException
+     */
+    public function balances(): array
+    {
+        return array_reduce(
+            static::wrapRequest($this->client->getBalances()),
+            static function (array $acc, array $item) {
+                if ($item['Balance']) {
+                    $acc[mb_strtolower($item['Currency'])] = (float)$item['Balance'];
+                }
+
+                return $acc;
+            },
+            []
+        );
+    }
+
+    /**
      * @param int $limit
      *
      * @return array

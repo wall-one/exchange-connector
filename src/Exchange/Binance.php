@@ -149,8 +149,30 @@ class Binance implements Exchange
 
         return array_merge([], ...array_map(
             static function (array $balance, string $currency) {
+                return $balance['available'] > 0.0000001 ? [$currency => $balance['available']] : [];
+            },
+            $balances,
+            array_keys($balances)
+        ));
+    }
+
+    /**
+     * @return array
+     *
+     * @throws ConnectorException
+     */
+    public function balances(): array
+    {
+        try {
+            $balances = static::wrapRequest($this->client->balances());
+        } catch (Exception $e) {
+            throw new ConnectorException($e->getMessage(), $e->getCode(), $e);
+        }
+
+        return array_merge([], ...array_map(
+            static function (array $balance, string $currency) {
                 $total = $balance['available'] + $balance['onOrder'];
-                return $balance['available'] > 0.0000001 ? [$currency => $total] : [];
+                return $total > 0.0000001 ? [$currency => $total] : [];
             },
             $balances,
             array_keys($balances)
@@ -271,9 +293,6 @@ class Binance implements Exchange
             $method = strtolower($side);
 
             $placedOrder = static::wrapRequest($this->client->$method($symbol->format(Symbol::BINANCE_FORMAT), $qty, $price));
-
-            if (!array_key_exists('orderId', $placedOrder)) {
-            }
 
             return (string)$placedOrder['orderId'];
         } catch (Throwable $e) {

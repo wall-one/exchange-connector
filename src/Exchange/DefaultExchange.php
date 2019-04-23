@@ -120,6 +120,16 @@ class DefaultExchange implements Exchange
     }
 
     /**
+     * @return array
+     *
+     * @throws ConnectorException
+     */
+    public function balances(): array
+    {
+        throw new ConnectorException('Not implemented');
+    }
+
+    /**
      * @param int $limit
      *
      * @return WaitResponse|array

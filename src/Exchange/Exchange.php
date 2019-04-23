@@ -52,6 +52,11 @@ interface Exchange
     public function wallet(): array;
 
     /**
+     * @return array
+     */
+    public function balances(): array;
+
+    /**
      * @param int $limit
      *
      * @return WaitResponse|array
