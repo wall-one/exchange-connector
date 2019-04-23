@@ -149,7 +149,8 @@ class Binance implements Exchange
 
         return array_merge([], ...array_map(
             static function (array $balance, string $currency) {
-                return $balance['available'] > 0.0000001 ? [$currency => $balance['available']] : [];
+                $total = $balance['available'] + $balance['onOrder'];
+                return $balance['available'] > 0.0000001 ? [$currency => $total] : [];
             },
             $balances,
             array_keys($balances)
