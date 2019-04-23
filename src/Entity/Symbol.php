@@ -36,6 +36,12 @@ class Symbol implements ArrayConvertible
      * @var float
      */
     private $step;
+
+    /**
+     * @var
+     */
+    private $tick;
+
     /**
      * @var float
      */
@@ -82,8 +88,12 @@ class Symbol implements ArrayConvertible
                 $minQty = (float)$filter['minQty'];
             }
 
+            if ($filter['filterType'] === 'LOT_SIZE') {
+                $step = (float)$filter['stepSize'];
+            }
+
             if ($filter['filterType'] === 'PRICE_FILTER') {
-                $step = (float)$filter['tickSize'];
+                $tick = (float)$filter['tickSize'];
             }
 
             if ($filter['filterType'] === 'MIN_NOTIONAL') {
@@ -100,7 +110,8 @@ class Symbol implements ArrayConvertible
             $response['baseAssetPrecision'],
             $step ?? 0.,
             $minQty ?? 0.001,
-            $minAmount ?? 0.001
+            $minAmount ?? 0.001,
+            $tick ?? 0.01
         );
     }
 
@@ -114,6 +125,7 @@ class Symbol implements ArrayConvertible
      * @param float $step
      * @param float $minQty
      * @param float $minAmount
+     * @param float $tick
      */
     public function __construct(
         string $id,
@@ -124,7 +136,8 @@ class Symbol implements ArrayConvertible
         int $quotePrecision,
         float $step,
         float $minQty,
-        float $minAmount = 0.
+        float $minAmount = 0.,
+        float $tick = 0.
     ) {
         $this->id = $id;
         $this->symbol = $symbol;
@@ -135,6 +148,7 @@ class Symbol implements ArrayConvertible
         $this->step = $step;
         $this->minQty = $minQty;
         $this->minAmount = $minAmount;
+        $this->tick = $tick;
     }
 
     /**
@@ -150,6 +164,7 @@ class Symbol implements ArrayConvertible
             'base_precision' => $this->basePrecision,
             'quote_precision' => $this->quotePrecision,
             'step' => $this->step,
+            'tick' => $this->tick,
             'min_qty' => $this->minQty,
             'min_amount' => $this->minAmount
         ];
