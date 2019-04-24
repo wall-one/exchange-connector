@@ -54,9 +54,10 @@ interface Exchange
     /**
      * @param int $limit
      *
+     * @param int|null $orderId
      * @return WaitResponse|array
      */
-    public function orders(int $limit = 10);
+    public function orders(int $limit = 10, ?int $orderId = null);
 
     /**
      * @param Symbol $symbol
@@ -70,9 +71,10 @@ interface Exchange
      * @param Symbol $symbol
      * @param int $limit
      *
+     * @param int|null $orderId
      * @return array
      */
-    public function ordersBySymbol(Symbol $symbol, int $limit = 10): array;
+    public function ordersBySymbol(Symbol $symbol, int $limit = 10, ?int $orderId = null): array;
 
     /**
      * @param string $side

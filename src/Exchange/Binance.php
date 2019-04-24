@@ -160,11 +160,12 @@ class Binance implements Exchange
     /**
      * @param int $limit
      *
+     * @param int|null $orderId
      * @return WaitResponse|array
      *
      * @throws ConnectorException
      */
-    public function orders(int $limit = 10)
+    public function orders(int $limit = 10, ?int $orderId = null)
     {
         $keys = array_keys($this->wallet());
         $symbols = array_column($this->symbols(), 'id');
@@ -187,7 +188,7 @@ class Binance implements Exchange
                     continue;
                 }
 
-                $symbolOrders = $this->ordersBySymbol(new Symbol(...$symbol), min($remainingLimit, $limit));
+                $symbolOrders = $this->ordersBySymbol(new Symbol(...$symbol), min($remainingLimit, $limit), $orderId);
                 $orders[] = array_slice($symbolOrders, 0, $remainingLimit);
 
                 $remainingLimit -= min($remainingLimit, count($symbolOrders));
@@ -229,14 +230,19 @@ class Binance implements Exchange
      * @param Symbol $symbol
      * @param int $limit
      *
+     * @param int|null $orderId
      * @return array
      *
      * @throws ConnectorException
      */
-    public function ordersBySymbol(Symbol $symbol, int $limit = 10): array
+    public function ordersBySymbol(Symbol $symbol, int $limit = 10, ?int $orderId = null): array
     {
+        if ( !$orderId ) {
+            $orderId = 1;
+        }
+
         try {
-            $history = static::wrapRequest($this->client->orders($symbol->format(Symbol::BINANCE_FORMAT), 100, $limit));
+            $history = static::wrapRequest($this->client->orders($symbol->format(Symbol::BINANCE_FORMAT), $limit, $orderId));
         } catch (Exception $e) {
             throw new ConnectorException($e->getMessage(), $e->getCode(), $e);
         }
