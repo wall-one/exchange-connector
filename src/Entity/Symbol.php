@@ -68,7 +68,9 @@ class Symbol implements ArrayConvertible
             8,
             8,
             0,
-            (float)$response['MinTradeSize']
+            (float)$response['MinTradeSize'],
+            0.001,
+            0.01
         );
     }
 
