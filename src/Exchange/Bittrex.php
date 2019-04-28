@@ -17,6 +17,7 @@ use MZNX\ExchangeConnector\Entity\Symbol;
 use MZNX\ExchangeConnector\Entity\Symbol as SymbolEntity;
 use MZNX\ExchangeConnector\Entity\Withdrawal;
 use MZNX\ExchangeConnector\Connection;
+use MZNX\ExchangeConnector\OrderTypes;
 use MZNX\ExchangeConnector\Symbol as ExchangeSymbol;
 use Throwable;
 
@@ -187,6 +188,7 @@ class Bittrex implements Exchange
     }
 
     /**
+     * @param string $type
      * @param string $side
      * @param ExchangeSymbol $symbol
      * @param float $price
@@ -196,8 +198,12 @@ class Bittrex implements Exchange
      *
      * @throws ConnectorException
      */
-    public function createOrder(string $side, ExchangeSymbol $symbol, float $price, float $qty): string
+    public function createOrder(string $type, string $side, ExchangeSymbol $symbol, float $price, float $qty): string
     {
+        if ($type !== OrderTypes::LIMIT) {
+            throw new ConnectorException(sprintf('Unknown order type %s. Allowed only limit', $type));
+        }
+
         if (!in_array(mb_strtolower($side), ['buy', 'sell'], true)) {
             throw new ConnectorException('Unknown side ' . $side);
         }

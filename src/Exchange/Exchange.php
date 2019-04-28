@@ -82,6 +82,7 @@ interface Exchange
     public function ordersBySymbol(Symbol $symbol, int $limit = 10, ?int $orderId = null): array;
 
     /**
+     * @param string $type
      * @param string $side
      * @param Symbol $symbol
      * @param float $price
@@ -89,7 +90,7 @@ interface Exchange
      *
      * @return string
      */
-    public function createOrder(string $side, Symbol $symbol, float $price, float $qty): string;
+    public function createOrder(string $type, string $side, Symbol $symbol, float $price, float $qty): string;
 
     /**
      * @param Symbol|int $symbolOrId

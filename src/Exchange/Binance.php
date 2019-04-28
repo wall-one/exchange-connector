@@ -16,6 +16,7 @@ use MZNX\ExchangeConnector\Entity\Order;
 use MZNX\ExchangeConnector\Entity\OrderBookEntry;
 use MZNX\ExchangeConnector\Entity\Symbol as SymbolEntity;
 use MZNX\ExchangeConnector\Entity\Withdrawal;
+use MZNX\ExchangeConnector\OrderTypes;
 use MZNX\ExchangeConnector\Symbol;
 use MZNX\ExchangeConnector\WaitResponse;
 use RuntimeException;
@@ -274,6 +275,7 @@ class Binance implements Exchange
     }
 
     /**
+     * @param string $type
      * @param string $side
      * @param Symbol $symbol
      * @param float $price
@@ -283,12 +285,24 @@ class Binance implements Exchange
      *
      * @throws ConnectorException
      */
-    public function createOrder(string $side, Symbol $symbol, float $price, float $qty): string
+    public function createOrder(string $type, string $side, Symbol $symbol, float $price, float $qty): string
     {
         try {
-            $method = strtolower($side);
+            if ($type === OrderTypes::LIMIT) {
+                $method = strtolower($side);
+            } elseif ($type === OrderTypes::MARKET) {
+                $method = 'market' . ucfirst(strtolower($side));
+            } else {
+                throw new ConnectorException(sprintf(
+                    'Unknown order type %s. See %s to get allowed order types',
+                    $type,
+                    OrderTypes::class
+                ));
+            }
 
-            $placedOrder = static::wrapRequest($this->client->$method($symbol->format(Symbol::BINANCE_FORMAT), $qty, $price));
+            $placedOrder = static::wrapRequest(
+                $this->client->$method($symbol->format(Symbol::BINANCE_FORMAT), $qty, $price)
+            );
 
             return (string)$placedOrder['orderId'];
         } catch (Throwable $e) {

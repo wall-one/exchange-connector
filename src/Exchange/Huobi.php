@@ -13,6 +13,7 @@ use MZNX\ExchangeConnector\Entity\Order;
 use MZNX\ExchangeConnector\Entity\OrderBookEntry;
 use MZNX\ExchangeConnector\Entity\Symbol as SymbolEntity;
 use MZNX\ExchangeConnector\Entity\Withdrawal;
+use MZNX\ExchangeConnector\OrderTypes;
 use MZNX\ExchangeConnector\Symbol;
 use MZNX\ExchangeConnector\Symbol as ExchangeSymbol;
 use MZNX\ExchangeConnector\WaitResponse;
@@ -272,15 +273,26 @@ class Huobi implements Exchange
     }
 
     /**
+     * @param string $type
      * @param string $side
      * @param Symbol $symbol
      * @param float $price
      * @param float $qty
      *
      * @return string
+     *
+     * @throws ConnectorException
      */
-    public function createOrder(string $side, Symbol $symbol, float $price, float $qty): string
+    public function createOrder(string $type, string $side, Symbol $symbol, float $price, float $qty): string
     {
+        if (!in_array($type, [OrderTypes::LIMIT, OrderTypes::MARKET], true)) {
+            throw new ConnectorException(sprintf(
+                'Unknown order type %s. See %s to get allowed order types',
+                $type,
+                OrderTypes::class
+            ));
+        }
+
         foreach ($this->client->get_account_accounts()['data'] as $item) {
             if (mb_strtolower($item['type']) === 'spot' && mb_strtolower($item['state']) === 'working') {
                 return $this->client->place_order(
@@ -288,7 +300,7 @@ class Huobi implements Exchange
                     $qty,
                     $price,
                     $symbol->format(Symbol::HUOBI_FORMAT),
-                    mb_strtolower($side) . '-limit'
+                    mb_strtolower($side) . '-' . mb_strtolower($type)
                 )['data'];
             }
         }
