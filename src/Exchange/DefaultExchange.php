@@ -132,11 +132,12 @@ class DefaultExchange implements Exchange
     /**
      * @param int $limit
      *
+     * @param int|null $orderId
      * @return WaitResponse|array
      *
      * @throws ConnectorException
      */
-    public function orders(int $limit = 10)
+    public function orders(int $limit = 10, ?int $orderId = null)
     {
         return $this->request('get', 'account/history_orders/all', ['limit' => $limit]);
     }
@@ -161,11 +162,12 @@ class DefaultExchange implements Exchange
      * @param Symbol $symbol
      * @param int $limit
      *
+     * @param int|null $orderId
      * @return array
      *
      * @throws ConnectorException
      */
-    public function ordersBySymbol(Symbol $symbol, int $limit = 10): array
+    public function ordersBySymbol(Symbol $symbol, int $limit = 10, ?int $orderId = null): array
     {
         return $this->request('get', sprintf(
             'account/%s/history_orders',

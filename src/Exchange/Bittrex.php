@@ -117,15 +117,16 @@ class Bittrex implements Exchange
     /**
      * @param int $limit
      *
+     * @param int|null $orderId
      * @return array
      *
      * @throws ConnectorException
      */
-    public function orders(?int $limit = 10): array
+    public function orders(?int $limit = 10, ?int $orderId = null): array
     {
         $orders = static::wrapRequest($this->client->getOrderHistory());
 
-        return array_map(
+        $orders =  array_map(
             static function (array $order) {
                 return $this->factory
                     ->getFactory(Order::class)
@@ -134,6 +135,15 @@ class Bittrex implements Exchange
             },
             $limit ? array_slice($orders, 0, $limit) : $orders
         );
+
+        if ( $orderId ) {
+            $orders = array_filter( $orders,
+                static function( array $order ) use ( $orderId ) {
+                    return $order['id'] > $orderId;
+                });
+        }
+
+        return $orders;
     }
 
     /**
@@ -159,14 +169,15 @@ class Bittrex implements Exchange
      * @param ExchangeSymbol $symbol
      * @param int|null $limit
      *
+     * @param int|null $orderId
      * @return array
      *
      * @throws ConnectorException
      */
-    public function ordersBySymbol(ExchangeSymbol $symbol, ?int $limit = 10): array
+    public function ordersBySymbol(ExchangeSymbol $symbol, ?int $limit = 10, ?int $orderId = null): array
     {
         $orders = array_filter(
-            $this->orders(null),
+            $this->orders(null, $orderId ),
             static function (array $order) use ($symbol) {
                 return $order['symbol'] === $symbol->format(ExchangeSymbol::STANDARD_FORMAT);
             }
