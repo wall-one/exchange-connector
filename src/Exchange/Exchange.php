@@ -54,7 +54,7 @@ interface Exchange
     /**
      * @return array
      */
-    public function balances(): array;
+    public function available(): array;
 
     /**
      * @param int $limit

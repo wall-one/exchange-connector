@@ -3,12 +3,7 @@ declare(strict_types=1);
 
 namespace MZNX\ExchangeConnector\Entity;
 
-use DateTime;
 use DateTimeInterface;
-use Exception;
-use MZNX\ExchangeConnector\Connector;
-use MZNX\ExchangeConnector\Exchange\Bittrex;
-use MZNX\ExchangeConnector\Symbol as ExchangeSymbol;
 
 class Order implements ArrayConvertible
 {
@@ -44,51 +39,6 @@ class Order implements ArrayConvertible
      * @var DateTimeInterface
      */
     private $dateTime;
-
-    /**
-     * @param array $response
-     *
-     * @return Order
-     *
-     * @throws Exception
-     */
-    public static function createFromBittrexResponse(array $response): self
-    {
-        $symbol = Bittrex::splitMarketName($response['Exchange']);
-
-        return new static(
-            $response['OrderUuid'],
-            Connector::buildMarketName(...$symbol->toArray()),
-            mb_strtoupper(explode('_', $response['OrderType'] ?? $response['Type'])[0]),
-            mb_strtoupper(explode('_', $response['OrderType'] ?? $response['Type'])[1]),
-            (float)$response['Price'],
-            (float)$response['Quantity'],
-            (float)$response['Quantity'] - (float)$response['QuantityRemaining'],
-            new DateTime($response['TimeStamp'] ?? $response['Closed'])
-        );
-    }
-
-    /**
-     * @param array $response
-     * @param ExchangeSymbol $symbol
-     *
-     * @return Order
-     */
-    public static function createFromBinanceResponse(array $response, ExchangeSymbol $symbol): self
-    {
-        return new static(
-            (string)$response['orderId'],
-            Connector::buildMarketName(...$symbol->toArray()),
-            mb_strtoupper($response['type']),
-            mb_strtoupper($response['side']),
-            (float)$response['price'],
-            (float)($response['origQty'] ?? $response['qty']),
-            array_key_exists('qty', $response)
-                ? (float)$response['qty']
-                : (float)$response['executedQty'],
-            DateTime::createFromFormat('U',(string)round($response['time'] / 1000))
-        );
-    }
 
     /**
      * @param string $id

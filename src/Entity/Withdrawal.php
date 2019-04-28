@@ -3,9 +3,7 @@ declare(strict_types=1);
 
 namespace MZNX\ExchangeConnector\Entity;
 
-use DateTime;
 use DateTimeInterface;
-use Exception;
 
 class Withdrawal implements ArrayConvertible
 {
@@ -37,70 +35,6 @@ class Withdrawal implements ArrayConvertible
      * @var string
      */
     private $status;
-
-    /**
-     * @param array $response
-     *
-     * @return Withdrawal
-     *
-     * @throws Exception
-     */
-    public static function createFromBittrexResponse(array $response): self
-    {
-        $status = 'success';
-
-        if ($response['Opened']) {
-            $status = 'pending';
-        } elseif ($response['Canceled']) {
-            $status = 'canceled';
-        }
-
-        return new static(
-            (float)$response['Amount'],
-            $response['Address'],
-            '',
-            mb_strtolower($response['Currency']),
-            $response['TxId'],
-            $response['Opened'] ? new DateTime($response['Opened']) : null,
-            $status
-        );
-    }
-
-    /**
-     * @param array $response
-     *
-     * @return Withdrawal
-     */
-    public static function createFromBinanceResponse(array $response): self
-    {
-        switch ($response['status']) {
-            case 1:
-                $status = 'canceled';
-                break;
-
-            case 5:
-                $status = 'failed';
-                break;
-
-            case 6:
-                $status = 'success';
-                break;
-
-            default:
-                $status = 'pending';
-                break;
-        }
-
-        return new static(
-            (float)$response['amount'],
-            mb_strtolower($response['asset']),
-            $response['address'],
-            $response['addressTag'],
-            $response['txId'],
-            DateTime::createFromFormat('U', (string)round($response['applyTime'] / 1000)),
-            $status
-        );
-    }
 
     /**
      * @param float $amount

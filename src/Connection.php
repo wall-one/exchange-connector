@@ -98,4 +98,16 @@ class Connection
     {
         return $this->customerId;
     }
+
+    /**
+     * @param string|null $customerId
+     *
+     * @return Connection
+     */
+    public function setCustomerId(?string $customerId): Connection
+    {
+        $this->customerId = $customerId;
+
+        return $this;
+    }
 }

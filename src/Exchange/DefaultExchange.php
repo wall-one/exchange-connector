@@ -124,7 +124,7 @@ class DefaultExchange implements Exchange
      *
      * @throws ConnectorException
      */
-    public function balances(): array
+    public function available(): array
     {
         throw new ConnectorException('Not implemented');
     }

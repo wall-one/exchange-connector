@@ -5,7 +5,8 @@ namespace MZNX\ExchangeConnector\Exchange;
 
 use Binance\API;
 use Exception;
-use MZNX\ExchangeConnector\BackwardCompatibilityTrait;
+use MZNX\ExchangeConnector\Authenticable;
+use MZNX\ExchangeConnector\BackwardCompatible;
 use MZNX\ExchangeConnector\Connection;
 use MZNX\ExchangeConnector\ConnectorException;
 use MZNX\ExchangeConnector\Entity\Candle;
@@ -22,21 +23,13 @@ use Throwable;
 
 class Binance implements Exchange
 {
-    use BackwardCompatibilityTrait;
+    use BackwardCompatible, Authenticable;
+
+    public const LABEL = 'binance';
 
     private $connection;
     /** @var API */
     private $client;
-
-    /**
-     * @param Connection|null $connection
-     */
-    public function __construct(?Connection $connection = null)
-    {
-        if (null !== $connection) {
-            $this->with($connection);
-        }
-    }
 
     /**
      * @param string $symbol
@@ -48,16 +41,6 @@ class Binance implements Exchange
     public static function splitMarketName(string $symbol): Symbol
     {
         throw new RuntimeException('Not implemented yet');
-    }
-
-    /**
-     * @param Connection $connection
-     *
-     * @return string
-     */
-    public function auth(Connection $connection): string
-    {
-        return base64_encode(json_encode($connection->toArray()));
     }
 
     /**
@@ -100,14 +83,6 @@ class Binance implements Exchange
     }
 
     /**
-     * @return bool
-     */
-    public function authenticated(): bool
-    {
-        return null !== $this->connection && null !== $this->client;
-    }
-
-    /**
      * @deprecated
      *
      * @param Symbol $symbol
@@ -139,7 +114,7 @@ class Binance implements Exchange
      *
      * @throws ConnectorException
      */
-    public function wallet(): array
+    public function available(): array
     {
         try {
             $balances = static::wrapRequest($this->client->balances());
@@ -161,7 +136,7 @@ class Binance implements Exchange
      *
      * @throws ConnectorException
      */
-    public function balances(): array
+    public function wallet(): array
     {
         try {
             $balances = static::wrapRequest($this->client->balances());
@@ -172,6 +147,7 @@ class Binance implements Exchange
         return array_merge([], ...array_map(
             static function (array $balance, string $currency) {
                 $total = $balance['available'] + $balance['onOrder'];
+
                 return $total > 0.0000001 ? [$currency => $total] : [];
             },
             $balances,
@@ -244,7 +220,12 @@ class Binance implements Exchange
             throw new ConnectorException($e->getMessage(), $e->getCode(), $e);
         }
 
-        return Order::createFromBinanceResponse($order, $symbol)->toArray();
+        $order['symbol'] = $symbol;
+
+        return $this->factory
+            ->getFactory(Order::class)
+            ->createFromResponse($order)
+            ->toArray();
     }
 
     /**
@@ -269,7 +250,12 @@ class Binance implements Exchange
                     return null;
                 }
 
-                return Order::createFromBinanceResponse($order, $symbol)->toArray();
+                $order['symbol'] = $symbol;
+
+                return $this->factory
+                    ->getFactory(Order::class)
+                    ->createFromResponse($order)
+                    ->toArray();
             },
             $history
         )));
@@ -339,8 +325,12 @@ class Binance implements Exchange
         }
 
         return array_map(
-            static function (array $order) use ($symbol) {
-                return OpenOrder::createFromBinanceResponse($order, $symbol)->toArray();
+            function (array $order) use ($symbol) {
+                $order['symbol'] = $symbol;
+
+                return $this->factory->getFactory(OpenOrder::class)
+                    ->createFromResponse($order)
+                    ->toArray();
             },
             $orders
         );
@@ -360,8 +350,10 @@ class Binance implements Exchange
         }
 
         return array_map(
-            static function (array $item) {
-                return Deposit::createFromBinanceResponse($item)->toArray();
+            function (array $item) {
+                return $this->factory->getFactory(Deposit::class)
+                    ->createFromResponse($item)
+                    ->toArray();
             },
             $history['depositList']
         );
@@ -404,22 +396,16 @@ class Binance implements Exchange
             throw new ConnectorException($e->getMessage(), $e->getCode(), $e);
         }
 
+        $adapter = function (string $price, string $qty) {
+            return $this->factory->getFactory(OrderBookEntry::class)
+                ->createFromResponse([(float)$price, (float)$qty])
+                ->toArray();
+        };
+
         return [
             'symbol' => $symbol->format(Symbol::STANDARD_FORMAT),
-            'bids' => array_map(
-                static function (string $price, string $qty) {
-                    return OrderBookEntry::createFromBinanceResponse([(float)$price, (float)$qty])->toArray();
-                },
-                array_keys($orderBook['bids']),
-                $orderBook['bids']
-            ),
-            'asks' => array_map(
-                static function (string $price, string $qty) {
-                    return OrderBookEntry::createFromBinanceResponse([(float)$price, (float)$qty])->toArray();
-                },
-                array_keys($orderBook['asks']),
-                $orderBook['asks']
-            )
+            'bids' => array_map($adapter, array_keys($orderBook['bids']), $orderBook['bids']),
+            'asks' => array_map($adapter, array_keys($orderBook['asks']), $orderBook['asks'])
         ];
     }
 
@@ -437,8 +423,11 @@ class Binance implements Exchange
         }
 
         return array_map(
-            static function (array $data) {
-                return SymbolEntity::createFromBinanceResponse($data)->toArray();
+            function (array $data) {
+                return $this->factory
+                    ->getFactory(SymbolEntity::class)
+                    ->createFromResponse($data)
+                    ->toArray();
             },
             $exchangeInfo['symbols']
         );

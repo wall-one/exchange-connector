@@ -3,12 +3,12 @@ declare(strict_types=1);
 
 namespace MZNX\ExchangeConnector;
 
-trait BackwardCompatibilityTrait
+trait BackwardCompatible
 {
     /**
      * @param int $ttl
      *
-     * @return BackwardCompatibilityTrait
+     * @return BackwardCompatible
      */
     public function cache(int $ttl): self
     {

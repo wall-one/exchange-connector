@@ -8,6 +8,7 @@ class Symbol
     public const STANDARD_FORMAT = '{quote}_{base}';
     public const BITTREX_FORMAT = '{base}-{quote}';
     public const BINANCE_FORMAT = '{quote}{base}';
+    public const HUOBI_FORMAT = '_{quote}{base}';
 
     private $base;
     private $quote;
@@ -41,7 +42,13 @@ class Symbol
      */
     public function format(string $format): string
     {
-        return strtr($format, ['{base}' => $this->base, '{quote}' => $this->quote]);
+        $formatted = strtr($format, ['{base}' => $this->base, '{quote}' => $this->quote]);
+
+        if (strpos($format, '_') === 0) {
+            return mb_strtolower(substr($formatted, 1));
+        }
+
+        return $formatted;
     }
 
     /**
