@@ -9,13 +9,19 @@
       "role": "Developer"
     }
   ],
+  "repositories": [
+    {
+      "type": "vcs",
+      "url": "https://github.com/wall-one/php-binance-api"
+    }
+  ],
   "require": {
     "php": "^7.2",
     "roave/security-advisories": "dev-master",
     "guzzlehttp/guzzle": "6.3.3",
     "psr/simple-cache": "1.0.1",
-    "codenix-sv/bittrex-api": "~0.2",
-    "jaggedsoft/php-binance-api": "@dev",
+    "codenix-sv/bittrex-api": "0.2.0",
+    "jaggedsoft/php-binance-api": "dev-master",
     "ext-json": "*",
     "ext-mbstring": "*",
     "ext-curl": "*"
