@@ -81,6 +81,14 @@ class WithdrawalFactory extends AbstractFactory
      */
     protected function createFromHuobiResponse(array $response): ArrayConvertible
     {
-
+        return new Withdrawal(
+            (float)$response['amount'],
+            mb_strtolower($response['currency']),
+            $response['address'],
+            $response['address-tag'],
+            $response['tx-hash'],
+            DateTime::createFromFormat('U', (string)round($response['updated-at'] / 1000)),
+            $response['status'] === 'safe' ? 'success' : 'pending'
+        );
     }
 }
