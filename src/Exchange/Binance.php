@@ -61,7 +61,8 @@ class Binance implements Exchange
 
             public function __construct(string $key, string $secret)
             {
-                $this->client = new class($key, $secret) extends API {
+                $this->client = new class($key, $secret) extends API
+                {
                     protected $caOverride = true;
                 };
             }
@@ -84,8 +85,6 @@ class Binance implements Exchange
     }
 
     /**
-     * @deprecated
-     *
      * @param Symbol $symbol
      * @param string $interval
      * @param int $limit
@@ -93,6 +92,8 @@ class Binance implements Exchange
      * @return array
      *
      * @throws ConnectorException
+     * @deprecated
+     *
      */
     public function candles(Symbol $symbol, string $interval, int $limit): array
     {
@@ -125,7 +126,7 @@ class Binance implements Exchange
 
         return array_merge([], ...array_map(
             static function (array $balance, string $currency) {
-                return $balance['available'] > 0.0000001 ? [$currency => $balance['available']] : [];
+                return $balance['available'] > 0.0000001 ? [mb_strtoupper($currency) => $balance['available']] : [];
             },
             $balances,
             array_keys($balances)
@@ -149,7 +150,7 @@ class Binance implements Exchange
             static function (array $balance, string $currency) {
                 $total = $balance['available'] + $balance['onOrder'];
 
-                return $total > 0.0000001 ? [$currency => $total] : [];
+                return $total > 0.0000001 ? [mb_strtoupper($currency) => $total] : [];
             },
             $balances,
             array_keys($balances)
@@ -160,6 +161,7 @@ class Binance implements Exchange
      * @param int $limit
      *
      * @param int|null $orderId
+     *
      * @return WaitResponse|array
      *
      * @throws ConnectorException
@@ -179,7 +181,7 @@ class Binance implements Exchange
                     continue;
                 }
 
-                if (in_array($asset1.$asset2, $symbols, true)) {
+                if (in_array($asset1 . $asset2, $symbols, true)) {
                     $symbol = [$asset2, $asset1];
                 } elseif (in_array($asset2 . $asset1, $symbols, true)) {
                     $symbol = [$asset1, $asset2];
@@ -235,23 +237,25 @@ class Binance implements Exchange
      * @param int $limit
      *
      * @param int|null $orderId
+     *
      * @return array
      *
      * @throws ConnectorException
      */
     public function ordersBySymbol(Symbol $symbol, int $limit = 10, ?int $orderId = null): array
     {
-        if ( !$orderId ) {
+        if (!$orderId) {
             $orderId = 1;
         }
 
         try {
-            $history = static::wrapRequest($this->client->orders($symbol->format(Symbol::BINANCE_FORMAT), $limit, $orderId));
+            $history = static::wrapRequest($this->client->orders($symbol->format(Symbol::BINANCE_FORMAT), $limit,
+                $orderId));
         } catch (Exception $e) {
             throw new ConnectorException($e->getMessage(), $e->getCode(), $e);
         }
 
-        if ( !is_array( $history ) ) {
+        if (!is_array($history)) {
             return [];
         }
 
@@ -320,7 +324,8 @@ class Binance implements Exchange
         try {
             if ($symbolOrId instanceof Symbol) {
                 foreach ($this->openOrders($symbolOrId) as $order) {
-                    static::wrapRequest($this->client->cancel($symbolOrId->format(Symbol::BINANCE_FORMAT), $order['id']));
+                    static::wrapRequest($this->client->cancel($symbolOrId->format(Symbol::BINANCE_FORMAT),
+                        $order['id']));
                 }
 
                 return true;

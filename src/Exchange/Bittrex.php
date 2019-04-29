@@ -86,7 +86,7 @@ class Bittrex implements Exchange
             static::wrapRequest($this->client->getBalances()),
             static function (array $acc, array $item) {
                 if ($item['Available'] > 0.0000001) {
-                    $acc[mb_strtolower($item['Currency'])] = (float)$item['Available'];
+                    $acc[mb_strtoupper($item['Currency'])] = (float)$item['Available'];
                 }
 
                 return $acc;
@@ -106,7 +106,7 @@ class Bittrex implements Exchange
             static::wrapRequest($this->client->getBalances()),
             static function (array $acc, array $item) {
                 if ($item['Balance'] > 0.0000001) {
-                    $acc[mb_strtolower($item['Currency'])] = (float)$item['Balance'];
+                    $acc[mb_strtoupper($item['Currency'])] = (float)$item['Balance'];
                 }
 
                 return $acc;

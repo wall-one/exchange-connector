@@ -119,7 +119,7 @@ class Huobi implements Exchange
                             }
 
                             $currency = mb_strtolower($item['currency']);
-                            $acc[$currency] = ($acc[$currency] ?? 0.) + $item['balance'];
+                            $acc[mb_strtoupper($currency)] = ($acc[$currency] ?? 0.) + $item['balance'];
 
                             return $acc;
                         },
@@ -154,7 +154,7 @@ class Huobi implements Exchange
                                 return $acc;
                             }
 
-                            $acc[mb_strtolower($item['currency'])] = $item['balance'];
+                            $acc[mb_strtoupper($item['currency'])] = $item['balance'];
 
                             return $acc;
                         },
@@ -170,10 +170,11 @@ class Huobi implements Exchange
 
     /**
      * @param int $limit
+     * @param int|null $orderId
      *
      * @return WaitResponse|array
      */
-    public function orders(int $limit = 10)
+    public function orders(int $limit = 10, int $orderId = null)
     {
         $keys = array_keys($this->wallet());
         $symbols = array_column($this->symbols(), 'id');
@@ -203,7 +204,7 @@ class Huobi implements Exchange
 
                 $checkedSymbols[] = implode('', $symbol);
 
-                $symbolOrders = $this->ordersBySymbol(new Symbol(...$symbol), min($remainingLimit, $limit));
+                $symbolOrders = $this->ordersBySymbol(new Symbol(...$symbol), min($remainingLimit, $limit), $orderId);
                 $orders[] = array_slice($symbolOrders, 0, $remainingLimit);
 
                 $remainingLimit -= min($remainingLimit, count($symbolOrders));
@@ -243,10 +244,11 @@ class Huobi implements Exchange
     /**
      * @param Symbol $symbol
      * @param int $limit
+     * @param int|null $orderId
      *
      * @return array
      */
-    public function ordersBySymbol(Symbol $symbol, int $limit = 10): array
+    public function ordersBySymbol(Symbol $symbol, int $limit = 10, int $orderId = null): array
     {
         $orders = $this->client->get_order_orders(
             $symbol->format(Symbol::HUOBI_FORMAT),
@@ -254,7 +256,7 @@ class Huobi implements Exchange
             '',
             '',
             'partial-canceled,filled,canceled',
-            '',
+            $orderId,
             '',
             $limit
         );
