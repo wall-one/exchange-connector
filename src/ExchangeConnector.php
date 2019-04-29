@@ -20,7 +20,7 @@ use MZNX\ExchangeConnector\Exchange\Exchange;
  * @method WaitResponse|array orders(int $limit = 10, ?int $orderId = null)
  * @method array orderInfo(Symbol $symbol, $id)
  * @method array ordersBySymbol(Symbol $symbol, int $limit = 10, ?int $orderId = null)
- * @method string createOrder(string $side, Symbol $symbol, float $price, float $qty)
+ * @method string createOrder(string $type, string $side, Symbol $symbol, float $price, float $qty)
  * @method bool cancelOrder(Symbol $symbolOrId) cancelOrder(string $symbolOrId)
  * @method array openOrders(Symbol $symbol)
  * @method array deposits()

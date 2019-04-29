@@ -16,6 +16,7 @@ use MZNX\ExchangeConnector\Entity\Order;
 use MZNX\ExchangeConnector\Entity\OrderBookEntry;
 use MZNX\ExchangeConnector\Entity\Symbol as SymbolEntity;
 use MZNX\ExchangeConnector\Entity\Withdrawal;
+use MZNX\ExchangeConnector\OrderTypes;
 use MZNX\ExchangeConnector\Symbol;
 use MZNX\ExchangeConnector\WaitResponse;
 use RuntimeException;
@@ -60,7 +61,8 @@ class Binance implements Exchange
 
             public function __construct(string $key, string $secret)
             {
-                $this->client = new class($key, $secret) extends API {
+                $this->client = new class($key, $secret) extends API
+                {
                     protected $caOverride = true;
                 };
             }
@@ -83,8 +85,6 @@ class Binance implements Exchange
     }
 
     /**
-     * @deprecated
-     *
      * @param Symbol $symbol
      * @param string $interval
      * @param int $limit
@@ -92,6 +92,8 @@ class Binance implements Exchange
      * @return array
      *
      * @throws ConnectorException
+     * @deprecated
+     *
      */
     public function candles(Symbol $symbol, string $interval, int $limit): array
     {
@@ -124,7 +126,7 @@ class Binance implements Exchange
 
         return array_merge([], ...array_map(
             static function (array $balance, string $currency) {
-                return $balance['available'] > 0.0000001 ? [$currency => $balance['available']] : [];
+                return $balance['available'] > 0.0000001 ? [mb_strtoupper($currency) => $balance['available']] : [];
             },
             $balances,
             array_keys($balances)
@@ -148,7 +150,7 @@ class Binance implements Exchange
             static function (array $balance, string $currency) {
                 $total = $balance['available'] + $balance['onOrder'];
 
-                return $total > 0.0000001 ? [$currency => $total] : [];
+                return $total > 0.0000001 ? [mb_strtoupper($currency) => $total] : [];
             },
             $balances,
             array_keys($balances)
@@ -159,6 +161,7 @@ class Binance implements Exchange
      * @param int $limit
      *
      * @param int|null $orderId
+     *
      * @return WaitResponse|array
      *
      * @throws ConnectorException
@@ -178,7 +181,7 @@ class Binance implements Exchange
                     continue;
                 }
 
-                if (in_array($asset1.$asset2, $symbols, true)) {
+                if (in_array($asset1 . $asset2, $symbols, true)) {
                     $symbol = [$asset2, $asset1];
                 } elseif (in_array($asset2 . $asset1, $symbols, true)) {
                     $symbol = [$asset1, $asset2];
@@ -234,23 +237,25 @@ class Binance implements Exchange
      * @param int $limit
      *
      * @param int|null $orderId
+     *
      * @return array
      *
      * @throws ConnectorException
      */
     public function ordersBySymbol(Symbol $symbol, int $limit = 10, ?int $orderId = null): array
     {
-        if ( !$orderId ) {
+        if (!$orderId) {
             $orderId = 1;
         }
 
         try {
-            $history = static::wrapRequest($this->client->orders($symbol->format(Symbol::BINANCE_FORMAT), $limit, $orderId));
+            $history = static::wrapRequest($this->client->orders($symbol->format(Symbol::BINANCE_FORMAT), $limit,
+                $orderId));
         } catch (Exception $e) {
             throw new ConnectorException($e->getMessage(), $e->getCode(), $e);
         }
 
-        if ( !is_array( $history ) ) {
+        if (!is_array($history)) {
             return [];
         }
 
@@ -274,6 +279,7 @@ class Binance implements Exchange
     }
 
     /**
+     * @param string $type
      * @param string $side
      * @param Symbol $symbol
      * @param float $price
@@ -283,12 +289,24 @@ class Binance implements Exchange
      *
      * @throws ConnectorException
      */
-    public function createOrder(string $side, Symbol $symbol, float $price, float $qty): string
+    public function createOrder(string $type, string $side, Symbol $symbol, float $price, float $qty): string
     {
         try {
-            $method = strtolower($side);
+            if ($type === OrderTypes::LIMIT) {
+                $method = strtolower($side);
+            } elseif ($type === OrderTypes::MARKET) {
+                $method = 'market' . ucfirst(strtolower($side));
+            } else {
+                throw new ConnectorException(sprintf(
+                    'Unknown order type %s. See %s to get allowed order types',
+                    $type,
+                    OrderTypes::class
+                ));
+            }
 
-            $placedOrder = static::wrapRequest($this->client->$method($symbol->format(Symbol::BINANCE_FORMAT), $qty, $price));
+            $placedOrder = static::wrapRequest(
+                $this->client->$method($symbol->format(Symbol::BINANCE_FORMAT), $qty, $price)
+            );
 
             return (string)$placedOrder['orderId'];
         } catch (Throwable $e) {
@@ -306,7 +324,8 @@ class Binance implements Exchange
         try {
             if ($symbolOrId instanceof Symbol) {
                 foreach ($this->openOrders($symbolOrId) as $order) {
-                    static::wrapRequest($this->client->cancel($symbolOrId->format(Symbol::BINANCE_FORMAT), $order['id']));
+                    static::wrapRequest($this->client->cancel($symbolOrId->format(Symbol::BINANCE_FORMAT),
+                        $order['id']));
                 }
 
                 return true;

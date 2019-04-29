@@ -17,6 +17,7 @@ use MZNX\ExchangeConnector\Entity\Symbol;
 use MZNX\ExchangeConnector\Entity\Symbol as SymbolEntity;
 use MZNX\ExchangeConnector\Entity\Withdrawal;
 use MZNX\ExchangeConnector\Connection;
+use MZNX\ExchangeConnector\OrderTypes;
 use MZNX\ExchangeConnector\Symbol as ExchangeSymbol;
 use Throwable;
 
@@ -85,7 +86,7 @@ class Bittrex implements Exchange
             static::wrapRequest($this->client->getBalances()),
             static function (array $acc, array $item) {
                 if ($item['Available'] > 0.0000001) {
-                    $acc[mb_strtolower($item['Currency'])] = (float)$item['Available'];
+                    $acc[mb_strtoupper($item['Currency'])] = (float)$item['Available'];
                 }
 
                 return $acc;
@@ -105,7 +106,7 @@ class Bittrex implements Exchange
             static::wrapRequest($this->client->getBalances()),
             static function (array $acc, array $item) {
                 if ($item['Balance'] > 0.0000001) {
-                    $acc[mb_strtolower($item['Currency'])] = (float)$item['Balance'];
+                    $acc[mb_strtoupper($item['Currency'])] = (float)$item['Balance'];
                 }
 
                 return $acc;
@@ -187,6 +188,7 @@ class Bittrex implements Exchange
     }
 
     /**
+     * @param string $type
      * @param string $side
      * @param ExchangeSymbol $symbol
      * @param float $price
@@ -196,8 +198,12 @@ class Bittrex implements Exchange
      *
      * @throws ConnectorException
      */
-    public function createOrder(string $side, ExchangeSymbol $symbol, float $price, float $qty): string
+    public function createOrder(string $type, string $side, ExchangeSymbol $symbol, float $price, float $qty): string
     {
+        if ($type !== OrderTypes::LIMIT) {
+            throw new ConnectorException(sprintf('Unknown order type %s. Allowed only limit', $type));
+        }
+
         if (!in_array(mb_strtolower($side), ['buy', 'sell'], true)) {
             throw new ConnectorException('Unknown side ' . $side);
         }

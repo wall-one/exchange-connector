@@ -21,7 +21,7 @@ class DepositFactory extends AbstractFactory
     {
         return new Deposit(
             (float)$response['Amount'],
-            mb_strtolower($response['Currency']),
+            mb_strtoupper($response['Currency']),
             $response['CryptoAddress'],
             '',
             $response['TxId'],
@@ -39,7 +39,7 @@ class DepositFactory extends AbstractFactory
     {
         return new Deposit(
             (float)$response['amount'],
-            mb_strtolower($response['asset']),
+            mb_strtoupper($response['asset']),
             $response['address'],
             $response['addressTag'],
             $response['txId'],
@@ -57,7 +57,7 @@ class DepositFactory extends AbstractFactory
     {
         return new Deposit(
             (float)$response['amount'],
-            mb_strtolower($response['currency']),
+            mb_strtoupper($response['currency']),
             $response['address'],
             $response['address-tag'],
             $response['tx-hash'],

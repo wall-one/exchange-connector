@@ -31,7 +31,7 @@ class WithdrawalFactory extends AbstractFactory
             (float)$response['Amount'],
             $response['Address'],
             '',
-            mb_strtolower($response['Currency']),
+            mb_strtoupper($response['Currency']),
             $response['TxId'],
             $response['Opened'] ? new DateTime($response['Opened']) : null,
             $status
@@ -65,7 +65,7 @@ class WithdrawalFactory extends AbstractFactory
 
         return new Withdrawal(
             (float)$response['amount'],
-            mb_strtolower($response['asset']),
+            mb_strtoupper($response['asset']),
             $response['address'],
             $response['addressTag'],
             $response['txId'],
@@ -83,7 +83,7 @@ class WithdrawalFactory extends AbstractFactory
     {
         return new Withdrawal(
             (float)$response['amount'],
-            mb_strtolower($response['currency']),
+            mb_strtoupper($response['currency']),
             $response['address'],
             $response['address-tag'],
             $response['tx-hash'],
