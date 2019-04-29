@@ -52,6 +52,11 @@ interface Exchange
     public function wallet(): array;
 
     /**
+     * @return array
+     */
+    public function available(): array;
+
+    /**
      * @param int $limit
      *
      * @param int|null $orderId

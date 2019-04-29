@@ -9,20 +9,28 @@
       "role": "Developer"
     }
   ],
+  "repositories": [
+    {
+      "type": "vcs",
+      "url": "https://github.com/wall-one/php-binance-api"
+    }
+  ],
   "require": {
     "php": "^7.2",
     "roave/security-advisories": "dev-master",
     "guzzlehttp/guzzle": "6.3.3",
     "psr/simple-cache": "1.0.1",
-    "codenix-sv/bittrex-api": "~0.2",
+    "codenix-sv/bittrex-api": "0.2.0",
+    "jaggedsoft/php-binance-api": "dev-master",
     "ext-json": "*",
     "ext-mbstring": "*",
-    "jaggedsoft/php-binance-api": "@dev"
+    "ext-curl": "*"
   },
   "autoload": {
     "psr-4": {
       "MZNX\\ExchangeConnector\\": "src/"
-    }
+    },
+    "classmap": ["src/External/Req.php"]
   },
   "description": "Connector lib for crypto exchanges"
 }

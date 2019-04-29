@@ -7,6 +7,7 @@ use MZNX\ExchangeConnector\Exchange\Bittrex;
 use MZNX\ExchangeConnector\Exchange\Binance;
 use MZNX\ExchangeConnector\Exchange\DefaultExchange;
 use MZNX\ExchangeConnector\Exchange\Exchange;
+use MZNX\ExchangeConnector\Exchange\Huobi;
 
 class Connector
 {
@@ -52,15 +53,25 @@ class Connector
      */
     public function resolve(Connection $connection): Exchange
     {
-        switch (mb_strtolower($connection->getExchange())) {
-            case 'bittrex':
-                return new Bittrex($connection);
+        static $mapping = [
+            Bittrex::LABEL => Bittrex::class,
+            Binance::LABEL => Binance::class,
+            Huobi::LABEL => Huobi::class,
+            Huobi::LABEL_RU => Huobi::class,
+            Huobi::LABEL_EN => Huobi::class,
+            Huobi::LABEL_CH => Huobi::class,
+        ];
 
-            case 'binance':
-                return new Binance($connection);
+        $exchange = mb_strtolower($connection->getExchange());
 
-            default:
-                return new DefaultExchange($this->connectorUrl, $connection);
+        if ($exchange !== 'huobi' && 0 === strpos($exchange, 'huobi')) {
+            $connection->setCustomerId(explode('_', $exchange)[1]);
         }
+
+        if (array_key_exists($exchange, $mapping)) {
+            return new $mapping[$exchange]($connection);
+        }
+
+        return new DefaultExchange($this->connectorUrl, $connection);
     }
 }

@@ -3,9 +3,7 @@ declare(strict_types=1);
 
 namespace MZNX\ExchangeConnector\Entity;
 
-use DateTime;
 use DateTimeInterface;
-use Exception;
 
 class Deposit implements ArrayConvertible
 {
@@ -37,44 +35,6 @@ class Deposit implements ArrayConvertible
      * @var DateTimeInterface
      */
     private $insertTime;
-
-    /**
-     * @param array $response
-     *
-     * @return Deposit
-     *
-     * @throws Exception
-     */
-    public static function createFromBittrexResponse(array $response): self
-    {
-        return new static(
-            (float)$response['Amount'],
-            mb_strtolower($response['Currency']),
-            $response['CryptoAddress'],
-            '',
-            $response['TxId'],
-            $response['Confirmations'] > 3 ? 'success' : 'pending',
-            new DateTime($response['LastUpdated'])
-        );
-    }
-
-    /**
-     * @param array $response
-     *
-     * @return Deposit
-     */
-    public static function createFromBinanceResponse(array $response): self
-    {
-        return new static(
-            (float)$response['amount'],
-            mb_strtolower($response['asset']),
-            $response['address'],
-            $response['addressTag'],
-            $response['txId'],
-            $response['status'] === 1 ? 'success' : 'pending',
-            DateTime::createFromFormat('U', (string)round($response['insertTime'] / 1000))
-        );
-    }
 
     /**
      * @param float $amount

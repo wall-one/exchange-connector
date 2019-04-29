@@ -120,6 +120,16 @@ class DefaultExchange implements Exchange
     }
 
     /**
+     * @return array
+     *
+     * @throws ConnectorException
+     */
+    public function available(): array
+    {
+        throw new ConnectorException('Not implemented');
+    }
+
+    /**
      * @param int $limit
      *
      * @param int|null $orderId

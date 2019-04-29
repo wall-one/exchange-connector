@@ -6,13 +6,15 @@ namespace MZNX\ExchangeConnector\Exchange;
 use codenixsv\Bittrex\BittrexManager;
 use codenixsv\Bittrex\Clients\BittrexClient;
 use Exception;
-use MZNX\ExchangeConnector\BackwardCompatibilityTrait;
+use MZNX\ExchangeConnector\Authenticable;
+use MZNX\ExchangeConnector\BackwardCompatible;
 use MZNX\ExchangeConnector\ConnectorException;
 use MZNX\ExchangeConnector\Entity\Deposit;
 use MZNX\ExchangeConnector\Entity\OpenOrder;
 use MZNX\ExchangeConnector\Entity\Order;
 use MZNX\ExchangeConnector\Entity\OrderBookEntry;
 use MZNX\ExchangeConnector\Entity\Symbol;
+use MZNX\ExchangeConnector\Entity\Symbol as SymbolEntity;
 use MZNX\ExchangeConnector\Entity\Withdrawal;
 use MZNX\ExchangeConnector\Connection;
 use MZNX\ExchangeConnector\Symbol as ExchangeSymbol;
@@ -20,7 +22,9 @@ use Throwable;
 
 class Bittrex implements Exchange
 {
-    use BackwardCompatibilityTrait;
+    use BackwardCompatible, Authenticable;
+
+    public const LABEL = 'bittrex';
 
     private const DELIMITER = '-';
     /**
@@ -43,16 +47,6 @@ class Bittrex implements Exchange
     }
 
     /**
-     * @param Connection|null $connection
-     */
-    public function __construct(?Connection $connection = null)
-    {
-        if (null !== $connection) {
-            $this->with($connection);
-        }
-    }
-
-    /**
      * @param Connection $connection
      *
      * @return Exchange
@@ -62,24 +56,6 @@ class Bittrex implements Exchange
         $this->client = (new BittrexManager($connection->getApiKey(), $connection->getSecretKey()))->createClient();
 
         return $this;
-    }
-
-    /**
-     * @param Connection $connection
-     *
-     * @return string
-     */
-    public function auth(Connection $connection): string
-    {
-        return base64_encode(json_encode($connection->toArray()));
-    }
-
-    /**
-     * @return bool
-     */
-    public function authenticated(): bool
-    {
-        return null !== $this->connection && null !== $this->client;
     }
 
     /**
@@ -103,13 +79,33 @@ class Bittrex implements Exchange
      *
      * @throws ConnectorException
      */
+    public function available(): array
+    {
+        return array_reduce(
+            static::wrapRequest($this->client->getBalances()),
+            static function (array $acc, array $item) {
+                if ($item['Available'] > 0.0000001) {
+                    $acc[mb_strtolower($item['Currency'])] = (float)$item['Available'];
+                }
+
+                return $acc;
+            },
+            []
+        );
+    }
+
+    /**
+     * @return array
+     *
+     * @throws ConnectorException
+     */
     public function wallet(): array
     {
         return array_reduce(
             static::wrapRequest($this->client->getBalances()),
             static function (array $acc, array $item) {
-                if ($item['Available']) {
-                    $acc[mb_strtolower($item['Currency'])] = (float)$item['Available'];
+                if ($item['Balance'] > 0.0000001) {
+                    $acc[mb_strtolower($item['Currency'])] = (float)$item['Balance'];
                 }
 
                 return $acc;
@@ -132,7 +128,10 @@ class Bittrex implements Exchange
 
         $orders =  array_map(
             static function (array $order) {
-                return Order::createFromBittrexResponse($order)->toArray();
+                return $this->factory
+                    ->getFactory(Order::class)
+                    ->createFromResponse($order)
+                    ->toArray();
             },
             $limit ? array_slice($orders, 0, $limit) : $orders
         );
@@ -160,7 +159,10 @@ class Bittrex implements Exchange
     {
         $order = static::wrapRequest($this->client->getOrder($id));
 
-        return Order::createFromBittrexResponse($order)->toArray();
+        return $this->factory
+            ->getFactory(Order::class)
+            ->createFromResponse($order)
+            ->toArray();
     }
 
     /**
@@ -244,7 +246,9 @@ class Bittrex implements Exchange
     {
         return array_map(
             static function (array $order) {
-                return OpenOrder::createFromBittrexResponse($order)->toArray();
+                return $this->factory->getFactory(OpenOrder::class)
+                    ->createFromResponse($order)
+                    ->toArray();
             },
             static::wrapRequest($this->client->getOpenOrders($symbol->format(ExchangeSymbol::BITTREX_FORMAT)))
         );
@@ -259,7 +263,9 @@ class Bittrex implements Exchange
     {
         return array_map(
             static function (array $deposit) {
-                return Deposit::createFromBittrexResponse($deposit)->toArray();
+                return $this->factory->getFactory(Deposit::class)
+                    ->createFromResponse($deposit)
+                    ->toArray();
             },
             static::wrapRequest($this->client->getDepositHistory())
         );
@@ -291,21 +297,16 @@ class Bittrex implements Exchange
     public function market(ExchangeSymbol $symbol, int $depth = 10): array
     {
         $orderBook = static::wrapRequest($this->client->getOrderBook($symbol->format(ExchangeSymbol::BITTREX_FORMAT)));
+        $adapter = function (array $entry) {
+            return $this->factory->getFactory(OrderBookEntry::class)
+                ->createFromResponse($entry)
+                ->toArray();
+        };
 
         return [
             'symbol' => $symbol->format(ExchangeSymbol::STANDARD_FORMAT),
-            'bids' => array_slice(array_map(
-                static function (array $entry) {
-                    return OrderBookEntry::createFromBittrexResponse($entry)->toArray();
-                },
-                $orderBook['buy']
-            ), 0, $depth),
-            'asks' => array_slice(array_map(
-                static function (array $entry) {
-                    return OrderBookEntry::createFromBittrexResponse($entry)->toArray();
-                },
-                $orderBook['sell']
-            ), 0, $depth)
+            'bids' => array_slice(array_map($adapter, $orderBook['buy']), 0, $depth),
+            'asks' => array_slice(array_map($adapter, $orderBook['sell']), 0, $depth)
         ];
     }
 
@@ -320,7 +321,10 @@ class Bittrex implements Exchange
 
         return array_map(
             static function (array $symbol) {
-                return Symbol::createFromBittrexResponse($symbol)->toArray();
+                return $this->factory
+                    ->getFactory(SymbolEntity::class)
+                    ->createFromResponse($symbol)
+                    ->toArray();
             },
             $symbols
         );
