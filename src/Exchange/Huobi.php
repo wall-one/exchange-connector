@@ -27,7 +27,7 @@ class Huobi implements Exchange
 
     public const LABEL = 'huobi';
     public const LABEL_RU = 'huobi_ru';
-    public const LABEL_EN = 'huobi_en';
+    public const LABEL_US = 'huobi_us';
     public const LABEL_CH = 'huobi_ch';
 
     /** @var Req */

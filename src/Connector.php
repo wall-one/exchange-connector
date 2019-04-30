@@ -50,6 +50,7 @@ class Connector
      * @return Exchange
      *
      * @throws ConnectorException
+     * @throws ConnectionException
      */
     public function resolve(Connection $connection): Exchange
     {
@@ -58,7 +59,7 @@ class Connector
             Binance::LABEL => Binance::class,
             Huobi::LABEL => Huobi::class,
             Huobi::LABEL_RU => Huobi::class,
-            Huobi::LABEL_EN => Huobi::class,
+            Huobi::LABEL_US => Huobi::class,
             Huobi::LABEL_CH => Huobi::class,
         ];
 
@@ -66,6 +67,10 @@ class Connector
 
         if ($exchange !== 'huobi' && 0 === strpos($exchange, 'huobi')) {
             $connection->setCustomerId(explode('_', $exchange)[1]);
+        }
+
+        if ($exchange === 'huobi' && !$connection->getCustomerId()) {
+            throw new ConnectionException('Region not specified');
         }
 
         if (array_key_exists($exchange, $mapping)) {
