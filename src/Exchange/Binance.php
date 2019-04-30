@@ -260,7 +260,7 @@ class Binance implements Exchange
         }
 
         $orders = array_values(array_filter(array_map(
-            static function (array $order) use ($symbol) {
+            function (array $order) use ($symbol) {
                 if ($order['status'] === 'NEW' || $order['status'] === 'PARTIALLY_FILLED') {
                     return null;
                 }
