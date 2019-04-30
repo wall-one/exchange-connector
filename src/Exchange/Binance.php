@@ -402,8 +402,9 @@ class Binance implements Exchange
         }
 
         return array_map(
-            static function (array $item) {
-                return Withdrawal::createFromBinanceResponse($item)->toArray();
+            function (array $item) {
+                return $this->factory->getFactory(Withdrawal::class)
+                    ->createFromResponse($item)->toArray();
             },
             $history['withdrawList']
         );
