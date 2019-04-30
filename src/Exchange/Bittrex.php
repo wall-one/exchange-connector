@@ -128,7 +128,7 @@ class Bittrex implements Exchange
         $orders = static::wrapRequest($this->client->getOrderHistory());
 
         $orders =  array_map(
-            static function (array $order) {
+            function (array $order) {
                 return $this->factory
                     ->getFactory(Order::class)
                     ->createFromResponse($order)
@@ -251,7 +251,7 @@ class Bittrex implements Exchange
     public function openOrders(ExchangeSymbol $symbol): array
     {
         return array_map(
-            static function (array $order) {
+            function (array $order) {
                 return $this->factory->getFactory(OpenOrder::class)
                     ->createFromResponse($order)
                     ->toArray();
@@ -268,7 +268,7 @@ class Bittrex implements Exchange
     public function deposits(): array
     {
         return array_map(
-            static function (array $deposit) {
+            function (array $deposit) {
                 return $this->factory->getFactory(Deposit::class)
                     ->createFromResponse($deposit)
                     ->toArray();
@@ -328,7 +328,7 @@ class Bittrex implements Exchange
         $symbols = static::wrapRequest($this->client->getMarkets());
 
         return array_map(
-            static function (array $symbol) {
+            function (array $symbol) {
                 return $this->factory
                     ->getFactory(SymbolEntity::class)
                     ->createFromResponse($symbol)
