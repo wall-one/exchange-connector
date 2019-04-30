@@ -285,8 +285,10 @@ class Bittrex implements Exchange
     public function withdrawals(): array
     {
         return array_map(
-            static function (array $withdrawal) {
-                return Withdrawal::createFromBittrexResponse($withdrawal)->toArray();
+            function (array $withdrawal) {
+                return $this->factory->getFactory(Withdrawal::class)
+                    ->createFromResponse($withdrawal)
+                    ->toArray();
             },
             static::wrapRequest($this->client->getWithdrawalHistory())
         );
