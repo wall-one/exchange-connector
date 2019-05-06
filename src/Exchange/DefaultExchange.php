@@ -176,6 +176,7 @@ class DefaultExchange implements Exchange
     }
 
     /**
+     * @param string $type
      * @param string $side
      * @param Symbol $symbol
      * @param float $price
@@ -186,6 +187,7 @@ class DefaultExchange implements Exchange
      * @throws ConnectorException
      */
     public function createOrder(
+        string $type,
         string $side,
         Symbol $symbol,
         float $price,
