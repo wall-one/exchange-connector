@@ -220,7 +220,7 @@ class Huobi implements Exchange
             }
         }
 
-        return array_merge(...$orders);
+        return !empty( $orders ) ? array_merge( ...$orders ) : [];
     }
 
     /**
