@@ -28,7 +28,7 @@ class OrderFactory extends AbstractFactory
             Connector::buildMarketName(...$symbol->toArray()),
             mb_strtoupper(explode('_', $response['OrderType'] ?? $response['Type'])[0]),
             mb_strtoupper(explode('_', $response['OrderType'] ?? $response['Type'])[1]),
-            (float)$response['Price'],
+            (float)$response['PricePerUnit'],
             (float)$response['Quantity'],
             (float)$response['Quantity'] - (float)$response['QuantityRemaining'],
             new DateTime($response['TimeStamp'] ?? $response['Closed'])
