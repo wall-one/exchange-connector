@@ -88,7 +88,7 @@ class WithdrawalFactory extends AbstractFactory
             $response['address-tag'],
             $response['tx-hash'],
             DateTime::createFromFormat('U', (string)round($response['updated-at'] / 1000)),
-            $response['status'] === 'safe' ? 'success' : 'pending'
+            $response['state'] === 'safe' ? 'success' : 'pending'
         );
     }
 }
