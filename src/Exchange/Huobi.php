@@ -64,7 +64,7 @@ class Huobi implements Exchange
             public function __call($name, $arguments)
             {
                 if (!method_exists($this->client, $name)) {
-                    throw new \RuntimeException("Method $name does not exists in " . get_class($this->client));
+                    throw new RuntimeException("Method $name does not exists in " . get_class($this->client));
                 }
 
                 $result = call_user_func_array([$this->client, $name], $arguments);
@@ -250,11 +250,12 @@ class Huobi implements Exchange
      */
     public function ordersBySymbol(Symbol $symbol, int $limit = 10, int $orderId = null): array
     {
+
         $orders = $this->client->get_order_orders(
             $symbol->format(Symbol::HUOBI_FORMAT),
             'buy-market,sell-market,buy-ioc,sell-ioc,buy-limit,sell-limit',
-            '',
-            '',
+            '2017-01-01',
+            date('Y-m-d'),
             'partial-canceled,filled,canceled',
             $orderId,
             '',
