@@ -369,7 +369,9 @@ class Huobi implements Exchange
     {
         $deposits = [];
 
-        foreach (array_keys($this->wallet()) as $base) {
+        $bases = array_map('strtolower', array_keys($this->wallet()));
+
+        foreach ($bases as $base) {
             $from = 0;
 
             $continue = true;
@@ -408,7 +410,9 @@ class Huobi implements Exchange
     {
         $withdrawals = [];
 
-        foreach (array_keys($this->wallet()) as $base) {
+        $bases = array_map('strtolower', array_keys($this->wallet()));
+
+        foreach ($bases as $base) {
             $from = 0;
 
             $continue = true;
