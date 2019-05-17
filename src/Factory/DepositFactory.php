@@ -61,7 +61,7 @@ class DepositFactory extends AbstractFactory
             $response['address'],
             $response['address-tag'],
             $response['tx-hash'],
-            $response['status'] === 'safe' ? 'success' : 'pending',
+            $response['state'] === 'safe' ? 'success' : 'pending',
             DateTime::createFromFormat('U', (string)round($response['updated-at'] / 1000))
         );
     }
