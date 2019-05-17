@@ -68,9 +68,9 @@ class OrderFactory extends AbstractFactory
             Connector::buildMarketName(...$response['symbol']->toArray()),
             mb_strtoupper(explode('-', $response['type'])[1]),
             mb_strtoupper(explode('-', $response['type'])[0]),
-            (float)($response['price'] ?: $response['field-cash-amount'] / $response['field-amount']),
+            (float)($response['price'] == 0 ? 0 : $response['field-cash-amount'] / $response['field-amount']),
             (float)$response['amount'],
-            (float)($response['field-cash-amount'] / $response['field-amount']),
+            (float)$response['field-amount'],
             DateTime::createFromFormat('U',(string)round($response['finished-at'] / 1000))
         );
     }

@@ -10,4 +10,4 @@ use MZNX\ExchangeConnector\Symbol;
 
 $connector = require __DIR__ . '/config.php';
 
-print_r($connector->ordersBySymbol(new Symbol('USDT', 'ETH')));
+print_r($connector->ordersBySymbol(new Symbol('USDT', 'ETH'), 10, 0));
