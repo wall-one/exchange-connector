@@ -13,10 +13,10 @@ use MZNX\ExchangeConnector\Entity\Order;
 use MZNX\ExchangeConnector\Entity\OrderBookEntry;
 use MZNX\ExchangeConnector\Entity\Symbol as SymbolEntity;
 use MZNX\ExchangeConnector\Entity\Withdrawal;
+use MZNX\ExchangeConnector\Exception\StopLossNotAvailableException;
+use MZNX\ExchangeConnector\Exception\TakeProfitNotAvailableException;
 use MZNX\ExchangeConnector\OrderTypes;
 use MZNX\ExchangeConnector\Symbol;
-use MZNX\ExchangeConnector\Symbol as ExchangeSymbol;
-use MZNX\ExchangeConnector\WaitResponse;
 use Req;
 use RuntimeException;
 use Throwable;
@@ -309,6 +309,38 @@ class Huobi implements Exchange
     }
 
     /**
+     * @param string $side
+     * @param Symbol $symbol
+     * @param float $price
+     * @param float $qty
+     * @param float $stopPrice
+     *
+     * @return string
+     *
+     * @throws StopLossNotAvailableException
+     */
+    public function stopLoss(string $side, Symbol $symbol, float $price, float $qty, float $stopPrice): string
+    {
+        throw new StopLossNotAvailableException('STOP LOSS is not supported on Huobi');
+    }
+
+    /**
+     * @param string $side
+     * @param Symbol $symbol
+     * @param float $price
+     * @param float $qty
+     * @param float $stopPrice
+     *
+     * @return string
+     *
+     * @throws TakeProfitNotAvailableException
+     */
+    public function takeProfit(string $side, Symbol $symbol, float $price, float $qty, float $stopPrice): string
+    {
+        throw new TakeProfitNotAvailableException('TAKE PROFIT is not supported on Huobi');
+    }
+
+    /**
      * @param Symbol|int $symbolOrId
      *
      * @return bool
@@ -316,7 +348,7 @@ class Huobi implements Exchange
     public function cancelOrder($symbolOrId): bool
     {
         try {
-            if ($symbolOrId instanceof ExchangeSymbol) {
+            if ($symbolOrId instanceof Symbol) {
                 $orders = $this->openOrders($symbolOrId);
 
                 foreach ($orders as $order) {

@@ -315,6 +315,66 @@ class Binance implements Exchange
     }
 
     /**
+     * @param string $side
+     * @param Symbol $symbol
+     * @param float $price
+     * @param float $qty
+     * @param float $stopPrice
+     *
+     * @return string
+     *
+     * @throws RuntimeException
+     */
+    public function stopLoss(string $side, Symbol $symbol, float $price, float $qty, float $stopPrice): string
+    {
+        $method = strtolower($side);
+
+        $placedOrder = static::wrapRequest(
+            $this->client->$method(
+                $symbol->format(Symbol::BINANCE_FORMAT),
+                $qty,
+                $price,
+                'STOP_LOSS_LIMIT',
+                [
+                    'stopPrice' => $stopPrice,
+                ]
+            )
+        );
+
+        return (string)$placedOrder['orderId'];
+    }
+
+    /**
+     * @param string $side
+     * @param Symbol $symbol
+     * @param float $price
+     * @param float $qty
+     * @param float $stopPrice
+     *
+     * @return string
+     *
+     * @throws RuntimeException
+     */
+    public function takeProfit(string $side, Symbol $symbol, float $price, float $qty, float $stopPrice): string
+    {
+        $method = strtolower($side);
+
+        $placedOrder = static::wrapRequest(
+            $this->client->$method(
+                $symbol->format(Symbol::BINANCE_FORMAT),
+                $qty,
+                $price,
+                'TAKE_PROFIT_LIMIT',
+                [
+                    'stopPrice' => $stopPrice,
+                ]
+            )
+        );
+
+        return (string)$placedOrder['orderId'];
+    }
+
+    /**
      * @param Symbol|int $symbolOrId
      *
      * @return bool
