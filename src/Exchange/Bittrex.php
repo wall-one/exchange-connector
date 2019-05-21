@@ -17,6 +17,8 @@ use MZNX\ExchangeConnector\Entity\Symbol;
 use MZNX\ExchangeConnector\Entity\Symbol as SymbolEntity;
 use MZNX\ExchangeConnector\Entity\Withdrawal;
 use MZNX\ExchangeConnector\Connection;
+use MZNX\ExchangeConnector\Exception\StopLossNotAvailableException;
+use MZNX\ExchangeConnector\Exception\TakeProfitNotAvailableException;
 use MZNX\ExchangeConnector\OrderTypes;
 use MZNX\ExchangeConnector\Symbol as ExchangeSymbol;
 use Throwable;
@@ -213,6 +215,38 @@ class Bittrex implements Exchange
         return static::wrapRequest(
             $this->client->$method($symbol->format(ExchangeSymbol::BITTREX_FORMAT), $qty, $price)
         )['uuid'];
+    }
+
+    /**
+     * @param string $side
+     * @param ExchangeSymbol $symbol
+     * @param float $price
+     * @param float $qty
+     * @param float $stopPrice
+     *
+     * @return string
+     *
+     * @throws StopLossNotAvailableException
+     */
+    public function stopLoss(string $side, ExchangeSymbol $symbol, float $price, float $qty, float $stopPrice): string
+    {
+        throw new StopLossNotAvailableException('STOP LOSS is not supported on Bittrex');
+    }
+
+    /**
+     * @param string $side
+     * @param ExchangeSymbol $symbol
+     * @param float $price
+     * @param float $qty
+     * @param float $stopPrice
+     *
+     * @return string
+     *
+     * @throws TakeProfitNotAvailableException
+     */
+    public function takeProfit(string $side, ExchangeSymbol $symbol, float $price, float $qty, float $stopPrice): string
+    {
+        throw new TakeProfitNotAvailableException('TAKE PROFIT is not supported on Bittrex');
     }
 
     /**

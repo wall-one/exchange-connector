@@ -93,6 +93,28 @@ interface Exchange
     public function createOrder(string $type, string $side, Symbol $symbol, float $price, float $qty): string;
 
     /**
+     * @param string $side
+     * @param Symbol $symbol
+     * @param float $price
+     * @param float $qty
+     * @param float $stopPrice
+     *
+     * @return string
+     */
+    public function stopLoss(string $side, Symbol $symbol, float $price, float $qty, float $stopPrice): string;
+
+    /**
+     * @param string $side
+     * @param Symbol $symbol
+     * @param float $price
+     * @param float $qty
+     * @param float $stopPrice
+     *
+     * @return string
+     */
+    public function takeProfit(string $side, Symbol $symbol, float $price, float $qty, float $stopPrice): string;
+
+    /**
      * @param Symbol|int $symbolOrId
      *
      * @return bool
