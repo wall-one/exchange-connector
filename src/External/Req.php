@@ -212,7 +212,7 @@ class Req
         $url = $this->create_sign_url();
         $return = $this->curl($url, $postdata);
 
-        return json_decode($return);
+        return json_decode($return, true);
     }
 
     // 申请撤销一个订单请求
