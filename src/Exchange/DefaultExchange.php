@@ -15,8 +15,6 @@ use MZNX\ExchangeConnector\Exception\TakeProfitNotAvailableException;
 use MZNX\ExchangeConnector\Symbol;
 use MZNX\ExchangeConnector\WaitResponse;
 use Psr\Http\Message\ResponseInterface;
-use MZNX\ExchangeConnector\Exception\StopLossNotAvailableException;
-use MZNX\ExchangeConnector\Exception\TakeProfitNotAvailableException;
 use Throwable;
 
 class DefaultExchange implements Exchange
@@ -208,38 +206,6 @@ class DefaultExchange implements Exchange
             'price' => $price,
             'qty' => $qty,
         ]);
-    }
-    
-    /**
-     * @param string $side
-     * @param Symbol $symbol
-     * @param float $price
-     * @param float $qty
-     * @param float $stopPrice
-     *
-     * @return string
-     *
-     * @throws StopLossNotAvailableException
-     */
-    public function stopLoss(string $side, Symbol $symbol, float $price, float $qty, float $stopPrice): string
-    {
-        throw new StopLossNotAvailableException('STOP LOSS is not supported on this exchange');
-    }
-
-    /**
-     * @param string $side
-     * @param Symbol $symbol
-     * @param float $price
-     * @param float $qty
-     * @param float $stopPrice
-     *
-     * @return string
-     *
-     * @throws TakeProfitNotAvailableException
-     */
-    public function takeProfit(string $side, Symbol $symbol, float $price, float $qty, float $stopPrice): string
-    {
-        throw new TakeProfitNotAvailableException('TAKE PROFIT is not supported on this exchange');
     }
     
     /**
