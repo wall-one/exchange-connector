@@ -9,6 +9,7 @@ use MZNX\ExchangeConnector\Connector;
 use MZNX\ExchangeConnector\Entity\ArrayConvertible;
 use MZNX\ExchangeConnector\Entity\Order;
 use MZNX\ExchangeConnector\Exchange\Bittrex;
+use MZNX\ExchangeConnector\Exchange\Okex;
 
 class OrderFactory extends AbstractFactory
 {
@@ -72,6 +73,28 @@ class OrderFactory extends AbstractFactory
             (float)$response['amount'],
             (float)$response['field-amount'],
             DateTime::createFromFormat('U',(string)round($response['finished-at'] / 1000))
+        );
+    }
+
+    /**
+     * @param array $response
+     *
+     * @return ArrayConvertible
+     * @throws Exception
+     */
+    protected function createFromOkexResponse(array $response): ArrayConvertible
+    {
+        $symbol = Okex::splitMarketName($response['instrument_id']);
+
+        return new Order(
+            $response['order_id'],
+            Connector::buildMarketName(...$symbol->toArray()),
+            mb_strtoupper($response['type']),
+            mb_strtoupper($response['side']),
+            (float)($response['price'] ?? $response['notional']),
+            (float)$response['size'],
+            (float)$response['filled_size'],
+            new DateTime('timestamp')
         );
     }
 }

@@ -9,6 +9,7 @@ class Symbol
     public const BITTREX_FORMAT = '{base}-{quote}';
     public const BINANCE_FORMAT = '{quote}{base}';
     public const HUOBI_FORMAT = '_{quote}{base}';
+    public const OKEX_FORMAT = '{base}-{quote}';
 
     private $base;
     private $quote;

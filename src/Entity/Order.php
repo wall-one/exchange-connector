@@ -41,13 +41,13 @@ class Order implements ArrayConvertible
     private $dateTime;
 
     /**
-     * @param string $id
-     * @param string $symbol
-     * @param string $type
-     * @param string $side
-     * @param float $price
-     * @param float $qty
-     * @param float $filled
+     * @param string            $id
+     * @param string            $symbol
+     * @param string            $type
+     * @param string            $side
+     * @param float             $price
+     * @param float             $qty
+     * @param float             $filled
      * @param DateTimeInterface $dateTime
      */
     public function __construct(

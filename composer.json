@@ -13,6 +13,10 @@
     {
       "type": "vcs",
       "url": "https://github.com/wall-one/php-binance-api"
+    },
+    {
+      "type": "vcs",
+      "url": "https://github.com/wall-one/laravel-okex"
     }
   ],
   "require": {
@@ -24,7 +28,8 @@
     "jaggedsoft/php-binance-api": "dev-master",
     "ext-json": "*",
     "ext-mbstring": "*",
-    "ext-curl": "*"
+    "ext-curl": "*",
+    "sadenergizer/laravel-okex": "dev-master"
   },
   "autoload": {
     "psr-4": {

@@ -53,12 +53,12 @@ class Symbol implements ArrayConvertible
      * @param string $symbol
      * @param string $base
      * @param string $quote
-     * @param int $basePrecision
-     * @param int $quotePrecision
-     * @param float $step
-     * @param float $minQty
-     * @param float $minAmount
-     * @param float $tick
+     * @param int    $basePrecision
+     * @param int    $quotePrecision
+     * @param float  $step
+     * @param float  $minQty
+     * @param float  $minAmount
+     * @param float  $tick
      */
     public function __construct(
         string $id,

@@ -7,7 +7,7 @@ use MZNX\ExchangeConnector\Exchange\Exchange;
 
 /**
  * @deprecated Will be removed in 2.0. Use MZNX\ExchangeConnector\Connector instead
- * @see Connector
+ * @see        Connector
  *
  * @method ExchangeConnector cache(int $ttl)
  * @method bool symbolExists(Symbol $symbol)
@@ -41,7 +41,7 @@ class ExchangeConnector
     /**
      * @param string $base
      * @param string $quote
-     * 
+     *
      * @return string
      */
     public static function buildMarketName(string $base, string $quote): string
@@ -62,7 +62,7 @@ class ExchangeConnector
     }
 
     /**
-     * @param string $exchangeUrl
+     * @param string          $exchangeUrl
      * @param Connection|null $connection
      */
     public function __construct(string $exchangeUrl, ?Connection $connection = null)
@@ -75,11 +75,11 @@ class ExchangeConnector
     }
 
     /**
-     * @deprecated inject in constructor instead
-     *
      * @param Connection $connection
      *
      * @return ExchangeConnector
+     * @deprecated inject in constructor instead
+     *
      */
     public function with(Connection $connection): self
     {

@@ -9,6 +9,7 @@ use MZNX\ExchangeConnector\Entity\Symbol;
 use MZNX\ExchangeConnector\Exchange\Binance;
 use MZNX\ExchangeConnector\Exchange\Bittrex;
 use MZNX\ExchangeConnector\Exchange\Huobi;
+use MZNX\ExchangeConnector\Exchange\Okex;
 
 abstract  class AbstractFactory implements Factory
 {
@@ -41,6 +42,9 @@ abstract  class AbstractFactory implements Factory
 
             case Huobi::LABEL:
                 return $this->createFromHuobiResponse($response);
+
+            case Okex::LABEL:
+                return $this->createFromOkexResponse($response);
         }
 
         throw new ConnectorException('Unknown exchange ' . $this->exchange);
@@ -66,4 +70,11 @@ abstract  class AbstractFactory implements Factory
      * @return ArrayConvertible
      */
     abstract protected function createFromHuobiResponse(array $response): ArrayConvertible;
+
+    /**
+     * @param array $response
+     *
+     * @return ArrayConvertible
+     */
+    abstract protected function createFromOkexResponse(array $response): ArrayConvertible;
 }
