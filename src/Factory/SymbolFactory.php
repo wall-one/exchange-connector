@@ -104,9 +104,9 @@ class SymbolFactory extends AbstractFactory
     {
         return new Symbol(
             $response['instrument_id'],
-            Connector::buildMarketName($response['base_currency'], $response['quote_currency']),
-            $response['base_currency'],
+            Connector::buildMarketName($response['quote_currency'], $response['base_currency']),
             $response['quote_currency'],
+            $response['base_currency'],
             abs((int)log10((float)$response['size_increment'])),
             abs((int)log10((float)$response['size_increment'])),
             (float)$response['size_increment'],

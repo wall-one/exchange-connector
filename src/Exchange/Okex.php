@@ -16,8 +16,10 @@ use MZNX\ExchangeConnector\Entity\Withdrawal;
 use MZNX\ExchangeConnector\Exception\StopLossNotAvailableException;
 use MZNX\ExchangeConnector\Exception\TakeProfitNotAvailableException;
 use MZNX\ExchangeConnector\External\Okex\Client;
+use MZNX\ExchangeConnector\OrderTypes;
 use MZNX\ExchangeConnector\Symbol;
 use MZNX\ExchangeConnector\WaitResponse;
+use Throwable;
 
 class Okex implements Exchange
 {
@@ -76,7 +78,7 @@ class Okex implements Exchange
 
         return array_merge(...array_map(
             static function (array $balance) {
-                return [mb_strtoupper($balance['currency']) => $balance['balance']];
+                return [mb_strtoupper($balance['currency']) => (float)$balance['balance']];
             },
             $response
         ));
@@ -93,7 +95,7 @@ class Okex implements Exchange
 
         return array_merge(...array_map(
             static function (array $balance) {
-                return [mb_strtoupper($balance['currency']) => $balance['available']];
+                return [mb_strtoupper($balance['currency']) => (float)$balance['available']];
             },
             $response
         ));
@@ -111,7 +113,7 @@ class Okex implements Exchange
     public function orders(int $limit = 10, ?int $orderId = null)
     {
         $keys = array_keys($this->wallet());
-        $symbols = array_column($this->symbols(), 'id');
+        $symbols = array_column($this->symbols(), 'symbol');
         $remainingLimit = $limit;
 
         $orders = [];
@@ -126,9 +128,9 @@ class Okex implements Exchange
                     continue;
                 }
 
-                if (in_array($asset1 . $asset2, $symbols, true)) {
+                if (in_array($asset1 . '_' . $asset2, $symbols, true)) {
                     $symbol = [$asset2, $asset1];
-                } elseif (in_array($asset2 . $asset1, $symbols, true)) {
+                } elseif (in_array($asset2 . '_' . $asset1, $symbols, true)) {
                     $symbol = [$asset1, $asset2];
                 } else {
                     continue;
@@ -209,9 +211,11 @@ class Okex implements Exchange
 
         do {
             $orders = $this->client->orders($symbol->format(Symbol::OKEX_FORMAT), $after);
-            $allOrders[] = $orders[0] ?? [];
-            $after = ($orders[1] ?? ['after' => null])['after'];
-        } while ($after);
+            $allOrders[] = $orders ?? [];
+            if ($orders) {
+                $after = $orders[count($orders) - 1]['order_id'];
+            }
+        } while (count($orders) === 100);
 
         $allOrders = array_merge(...$allOrders);
 
@@ -250,10 +254,28 @@ class Okex implements Exchange
      * @param float  $qty
      *
      * @return string
+     *
+     * @throws ConnectorException
      */
     public function createOrder(string $type, string $side, Symbol $symbol, float $price, float $qty): string
     {
-        // TODO: Implement createOrder() method.
+        if (!in_array($type, [OrderTypes::LIMIT, OrderTypes::MARKET], true)) {
+            throw new ConnectorException(sprintf(
+                'Unknown order type %s. See %s to get allowed order types',
+                $type,
+                OrderTypes::class
+            ));
+        }
+
+        $response = $this->client->placeOrder(
+            $type,
+            $side,
+            $symbol->format(Symbol::OKEX_FORMAT),
+            $qty,
+            OrderTypes::LIMIT === $type ? $price : null
+        );
+
+        return (string)$response['order_id'];
     }
 
     /**
@@ -295,7 +317,21 @@ class Okex implements Exchange
      */
     public function cancelOrder($symbolOrId): bool
     {
-        // TODO: Implement cancelOrder() method.
+        try {
+            if ($symbolOrId instanceof Symbol) {
+                $orders = $this->openOrders($symbolOrId);
+
+                foreach ($orders as $order) {
+                    $this->client->cancelOrder($order['id'], $symbolOrId->format(Symbol::OKEX_FORMAT));
+                }
+
+                return true;
+            }
+
+            throw new ConnectorException('Cannot cancel order without symbol');
+        } catch (Throwable $t) {
+            return false;
+        }
     }
 
     /**
@@ -311,10 +347,10 @@ class Okex implements Exchange
         $after = null;
 
         do {
-            $orders = $this->client->orders($symbol->format(Symbol::OKEX_FORMAT), $after);
-            $allOrders[] = $orders[0] ?? [];
-            $after = ($orders[1] ?? ['after' => null])['after'];
-        } while ($after);
+            $orders = $this->client->openOrders($symbol->format(Symbol::OKEX_FORMAT), $after);
+
+            $allOrders[] = $orders ?? [];
+        } while (count($orders) === 100);
 
         $allOrders = array_merge(...$allOrders);
 

@@ -91,10 +91,10 @@ class OrderFactory extends AbstractFactory
             Connector::buildMarketName(...$symbol->toArray()),
             mb_strtoupper($response['type']),
             mb_strtoupper($response['side']),
-            (float)($response['price'] ?? $response['notional']),
-            (float)$response['size'],
+            (float)($response['price'] ?: $response['notional']),
+            (float)$response['size'] ?: (float)$response['filled_size'],
             (float)$response['filled_size'],
-            new DateTime('timestamp')
+            new DateTime($response['timestamp'])
         );
     }
 }

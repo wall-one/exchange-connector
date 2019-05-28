@@ -13,6 +13,12 @@ class Client
     private const GET = 'GET';
     private const POST = 'POST';
 
+    public const SELL = 'sell';
+    public const BUY = 'buy';
+
+    public const LIMIT = 'limit';
+    public const MARKET = 'market';
+
     private $apiKey;
     private $secretKey;
     private $passPhrase;
@@ -99,6 +105,45 @@ class Client
             ],
             $from ? ['from' => $from] : []
         ));
+    }
+
+    /**
+     * @param string     $type
+     * @param string     $side
+     * @param string     $symbol
+     * @param float      $qty
+     * @param float|null $price
+     *
+     * @return array
+     *
+     * @throws ConnectorException
+     */
+    public function placeOrder(string $type, string $side, string $symbol, float $qty, ?float $price = null): array
+    {
+        return $this->request(self::POST, '/spot/v3/orders', array_filter([
+            'type' => strtolower($type),
+            'side' => strtolower($side),
+            'instrument_id' => $symbol,
+            'margin_trading' => 1,
+            'order_type' => 0,
+            'price' => $price,
+            'size' => $qty
+        ]));
+    }
+
+    /**
+     * @param string $id
+     * @param string $symbol
+     *
+     * @return array
+     *
+     * @throws ConnectorException
+     */
+    public function cancelOrder(string $id, string $symbol): array
+    {
+        return $this->request(self::POST, '/spot/v3/cancel_orders/' . $id, [
+            'instrument_id' => $symbol
+        ]);
     }
 
     /**
@@ -196,7 +241,25 @@ class Client
                 throw new ConnectorException($error['message'] ?? 'Unexpected error');
             }
 
-            return json_decode($response->getBody()->getContents(), true) ?? [];
+            $response = json_decode($response->getBody()->getContents(), true) ?? [];
+
+            if (!($response['result'] ?? true)) {
+                $message = null;
+
+                if (array_key_exists('error_code', $response)) {
+                    $message .= "[{$response['error_code']}] ";
+                }
+
+                if (array_key_exists('error_message', $response)) {
+                    $message .= $response['error_message'];
+                } else {
+                    $message .= 'Something wrong';
+                }
+
+                throw new ConnectorException($message);
+            }
+
+            return $response;
         } catch (Exception $e) {
             if ($e instanceof ConnectorException) {
                 throw $e;
