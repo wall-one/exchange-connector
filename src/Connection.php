@@ -20,7 +20,6 @@ class Connection
      * @param string $secretKey
      * @param string|null $customerId
      *
-     * @throws ConnectorException
      */
     public function __construct(string $exchange, string $apiKey, string $secretKey, ?string $customerId = null)
     {

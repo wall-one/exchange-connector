@@ -63,8 +63,8 @@ class Symbol implements ArrayConvertible
     public function __construct(
         string $id,
         string $symbol,
-        string $base,
         string $quote,
+        string $base,
         int $basePrecision,
         int $quotePrecision,
         float $step,

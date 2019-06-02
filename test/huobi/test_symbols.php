@@ -10,6 +10,6 @@ use MZNX\ExchangeConnector\Symbol;
 
 $connector = require __DIR__ . '/config.php';
 
-print_r($connector->bases());
+print_r($connector->symbols());
 print_r($connector->symbolExists(new Symbol('USDT', 'BTC')));
 print_r($connector->assetExists('BTC'));
