@@ -23,6 +23,20 @@ class OrderFactory extends AbstractFactory
     {
         $symbol = Bittrex::splitMarketName($response['Exchange']);
 
+        $status = 'FILLED';
+
+        if ( isset($response['IsOpen']) ) {
+            if ( $response['QuantityRemaining'] != 0 ) {
+                $status = 'OPENED';
+            }
+        } else {
+            if ( $response['QuantityRemaining'] == 0 ) {
+                $status = 'FILLED';
+            } else {
+                $status = 'CANCELED';
+            }
+        }
+
         return new Order(
             $response['OrderUuid'],
             Connector::buildMarketName(...$symbol->toArray()),
@@ -31,7 +45,8 @@ class OrderFactory extends AbstractFactory
             (float)$response['PricePerUnit'],
             (float)$response['Quantity'],
             (float)$response['Quantity'] - (float)$response['QuantityRemaining'],
-            new DateTime($response['TimeStamp'] ?? $response['Closed'])
+            new DateTime($response['TimeStamp'] ?? $response['Closed']),
+            $status
         );
     }
 
@@ -52,7 +67,8 @@ class OrderFactory extends AbstractFactory
             array_key_exists('qty', $response)
                 ? (float)$response['qty']
                 : (float)$response['executedQty'],
-            DateTime::createFromFormat('U',(string)round($response['time'] / 1000))
+            DateTime::createFromFormat('U',(string)round($response['time'] / 1000)),
+            $response['status']
         );
     }
 
@@ -71,7 +87,8 @@ class OrderFactory extends AbstractFactory
             (float)($response['price'] == 0 ? 0 : $response['field-cash-amount'] / $response['field-amount']),
             (float)$response['amount'],
             (float)$response['field-amount'],
-            DateTime::createFromFormat('U',(string)round($response['finished-at'] / 1000))
+            DateTime::createFromFormat('U',(string)round($response['finished-at'] / 1000)),
+            mb_strtoupper( $response['state'] )
         );
     }
 }
