@@ -79,12 +79,18 @@ class OrderFactory extends AbstractFactory
      */
     protected function createFromHuobiResponse(array $response): ArrayConvertible
     {
+        if ( $response['field-amount'] != 0 ) {
+            $price = $response['field-cash-amount'] / $response['field-amount'];
+        } else {
+            $price = 0;
+        }
+
         return new Order(
             (string)$response['id'],
             Connector::buildMarketName(...$response['symbol']->toArray()),
             mb_strtoupper(explode('-', $response['type'])[1]),
             mb_strtoupper(explode('-', $response['type'])[0]),
-            (float)($response['price'] == 0 ? 0 : $response['field-cash-amount'] / $response['field-amount']),
+            (float)($response['price'] == 0 ? 0 : $price),
             (float)$response['amount'],
             (float)$response['field-amount'],
             DateTime::createFromFormat('U',(string)round($response['finished-at'] / 1000)),
