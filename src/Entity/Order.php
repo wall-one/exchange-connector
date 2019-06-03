@@ -41,14 +41,20 @@ class Order implements ArrayConvertible
     private $dateTime;
 
     /**
-     * @param string            $id
-     * @param string            $symbol
-     * @param string            $type
-     * @param string            $side
-     * @param float             $price
-     * @param float             $qty
-     * @param float             $filled
+     * @var string|null
+     */
+    private $status;
+
+    /**
+     * @param string $id
+     * @param string $symbol
+     * @param string $type
+     * @param string $side
+     * @param float $price
+     * @param float $qty
+     * @param float $filled
      * @param DateTimeInterface $dateTime
+     * @param string|null $status
      */
     public function __construct(
         string $id,
@@ -58,7 +64,8 @@ class Order implements ArrayConvertible
         float $price,
         float $qty,
         float $filled,
-        DateTimeInterface $dateTime
+        DateTimeInterface $dateTime,
+        ?string $status = null
     ) {
         $this->id = $id;
         $this->symbol = $symbol;
@@ -68,6 +75,7 @@ class Order implements ArrayConvertible
         $this->qty = $qty;
         $this->filled = $filled;
         $this->dateTime = $dateTime;
+        $this->status = $status;
     }
 
     /**
@@ -83,6 +91,7 @@ class Order implements ArrayConvertible
             'price' => $this->price,
             'qty' => $this->qty,
             'filled' => $this->filled,
+            'status' => $this->status,
             'timestamp' => $this->dateTime->getTimestamp()
         ];
     }
