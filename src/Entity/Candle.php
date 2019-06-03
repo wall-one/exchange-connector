@@ -73,15 +73,15 @@ class Candle implements ArrayConvertible
     }
 
     /**
-     * @param int $openTime
-     * @param int $closeTime
+     * @param int   $openTime
+     * @param int   $closeTime
      * @param float $open
      * @param float $high
      * @param float $low
      * @param float $close
      * @param float $volume
      * @param float $assetVolume
-     * @param int $trades
+     * @param int   $trades
      * @param float $assetBuyVolume
      * @param float $takerBuyVolume
      */

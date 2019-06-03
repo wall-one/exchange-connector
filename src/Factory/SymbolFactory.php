@@ -94,4 +94,25 @@ class SymbolFactory extends AbstractFactory
             0.00001
         );
     }
+
+    /**
+     * @param array $response
+     *
+     * @return ArrayConvertible
+     */
+    protected function createFromOkexResponse(array $response): ArrayConvertible
+    {
+        return new Symbol(
+            $response['instrument_id'],
+            Connector::buildMarketName($response['quote_currency'], $response['base_currency']),
+            $response['quote_currency'],
+            $response['base_currency'],
+            abs((int)log10((float)$response['size_increment'])),
+            abs((int)log10((float)$response['size_increment'])),
+            (float)$response['size_increment'],
+            0.,
+            (float)$response['min_size'],
+            (float)$response['tick_size']
+        );
+    }
 }

@@ -33,7 +33,7 @@ trait BackwardCompatible
     public function assetExists(string $asset): bool
     {
         $symbols = array_map('mb_strtoupper', array_column($this->symbols(), 'symbol'));
-        $assets = array_merge(...array_map(
+        $assets = array_merge([], ...array_map(
             static function (string $symbol) {
                 return explode('_', $symbol);
             },

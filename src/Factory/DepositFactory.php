@@ -65,4 +65,24 @@ class DepositFactory extends AbstractFactory
             DateTime::createFromFormat('U', (string)round($response['updated-at'] / 1000))
         );
     }
+
+    /**
+     * @param array $response
+     *
+     * @return ArrayConvertible
+     *
+     * @throws Exception
+     */
+    protected function createFromOkexResponse(array $response): ArrayConvertible
+    {
+        return new Deposit(
+            (float)$response['amount'],
+            mb_strtoupper($response['currency']),
+            $response['to'],
+            '',
+            $response['txid'],
+            (int)$response['status'] === 2 ? 'success' : 'pending',
+            new DateTime($response['timestamp'])
+        );
+    }
 }

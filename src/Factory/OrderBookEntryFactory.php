@@ -37,4 +37,14 @@ class OrderBookEntryFactory extends AbstractFactory
     {
         return new OrderBookEntry(...array_reverse($response));
     }
+
+    /**
+     * @param array $response
+     *
+     * @return ArrayConvertible
+     */
+    protected function createFromOkexResponse(array $response): ArrayConvertible
+    {
+        return new OrderBookEntry((float)$response[1], (float)$response[0]);
+    }
 }

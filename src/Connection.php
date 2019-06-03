@@ -15,11 +15,10 @@ class Connection
     private $customerId;
 
     /**
-     * @param string $exchange
-     * @param string $apiKey
-     * @param string $secretKey
+     * @param string      $exchange
+     * @param string      $apiKey
+     * @param string      $secretKey
      * @param string|null $customerId
-     *
      */
     public function __construct(string $exchange, string $apiKey, string $secretKey, ?string $customerId = null)
     {

@@ -37,13 +37,13 @@ class Withdrawal implements ArrayConvertible
     private $status;
 
     /**
-     * @param float $amount
-     * @param string $address
-     * @param string $addressTag
-     * @param string $asset
-     * @param string $txId
+     * @param float                  $amount
+     * @param string                 $address
+     * @param string                 $addressTag
+     * @param string                 $asset
+     * @param string                 $txId
      * @param DateTimeInterface|null $applyTime
-     * @param string $status
+     * @param string                 $status
      */
     public function __construct(
         float $amount,
