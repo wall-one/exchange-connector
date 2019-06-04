@@ -37,12 +37,12 @@ class Deposit implements ArrayConvertible
     private $insertTime;
 
     /**
-     * @param float $amount
-     * @param string $asset
-     * @param string $address
-     * @param string $addressTag
-     * @param string $txId
-     * @param string $status
+     * @param float             $amount
+     * @param string            $asset
+     * @param string            $address
+     * @param string            $addressTag
+     * @param string            $txId
+     * @param string            $status
      * @param DateTimeInterface $insertTime
      */
     public function __construct(

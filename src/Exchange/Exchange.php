@@ -36,13 +36,13 @@ interface Exchange
     public function authenticated(): bool;
 
     /**
-     * @deprecated
-     *
      * @param Symbol $symbol
      * @param string $interval
-     * @param int $limit
+     * @param int    $limit
      *
      * @return array
+     * @deprecated
+     *
      */
     public function candles(Symbol $symbol, string $interval, int $limit): array;
 
@@ -57,26 +57,28 @@ interface Exchange
     public function available(): array;
 
     /**
-     * @param int $limit
+     * @param int      $limit
      *
      * @param int|null $orderId
+     *
      * @return WaitResponse|array
      */
     public function orders(int $limit = 10, ?int $orderId = null);
 
     /**
      * @param Symbol $symbol
-     * @param $id
+     * @param        $id
      *
      * @return array
      */
     public function orderInfo(Symbol $symbol, $id): array;
 
     /**
-     * @param Symbol $symbol
-     * @param int $limit
+     * @param Symbol   $symbol
+     * @param int      $limit
      *
      * @param int|null $orderId
+     *
      * @return array
      */
     public function ordersBySymbol(Symbol $symbol, int $limit = 10, ?int $orderId = null): array;
@@ -85,8 +87,8 @@ interface Exchange
      * @param string $type
      * @param string $side
      * @param Symbol $symbol
-     * @param float $price
-     * @param float $qty
+     * @param float  $price
+     * @param float  $qty
      *
      * @return string
      */
@@ -95,9 +97,9 @@ interface Exchange
     /**
      * @param string $side
      * @param Symbol $symbol
-     * @param float $price
-     * @param float $qty
-     * @param float $stopPrice
+     * @param float  $price
+     * @param float  $qty
+     * @param float  $stopPrice
      *
      * @return string
      */
@@ -106,9 +108,9 @@ interface Exchange
     /**
      * @param string $side
      * @param Symbol $symbol
-     * @param float $price
-     * @param float $qty
-     * @param float $stopPrice
+     * @param float  $price
+     * @param float  $qty
+     * @param float  $stopPrice
      *
      * @return string
      */
@@ -140,7 +142,7 @@ interface Exchange
 
     /**
      * @param Symbol $symbol
-     * @param int $depth
+     * @param int    $depth
      *
      * @return array
      */

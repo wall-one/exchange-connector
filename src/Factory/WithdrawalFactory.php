@@ -91,4 +91,43 @@ class WithdrawalFactory extends AbstractFactory
             $response['state'] === 'confirmed' ? 'success' : 'pending'
         );
     }
+
+    /**
+     * @param array $response
+     *
+     * @return ArrayConvertible
+     *
+     * @throws Exception
+     */
+    protected function createFromOkexResponse(array $response): ArrayConvertible
+    {
+        switch ((int)$response['status']) {
+            case -3:
+            case -2:
+                $status = 'canceled';
+                break;
+
+            case -1:
+                $status = 'failed';
+                break;
+
+            case 2:
+                $status = 'success';
+                break;
+
+            default:
+                $status = 'pending';
+                break;
+        }
+
+        return new Withdrawal(
+            (float)$response['amount'],
+            $response['to'],
+            '',
+            mb_strtoupper($response['currency']),
+            $response['txid'],
+            new DateTime($response['timestamp']),
+            $status
+        );
+    }
 }

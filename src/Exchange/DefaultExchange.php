@@ -10,11 +10,11 @@ use InvalidArgumentException;
 use function json_decode;
 use MZNX\ExchangeConnector\Connection;
 use MZNX\ExchangeConnector\ConnectorException;
+use MZNX\ExchangeConnector\Exception\StopLossNotAvailableException;
+use MZNX\ExchangeConnector\Exception\TakeProfitNotAvailableException;
 use MZNX\ExchangeConnector\Symbol;
 use MZNX\ExchangeConnector\WaitResponse;
 use Psr\Http\Message\ResponseInterface;
-use MZNX\ExchangeConnector\Exception\StopLossNotAvailableException;
-use MZNX\ExchangeConnector\Exception\TakeProfitNotAvailableException;
 use Throwable;
 
 class DefaultExchange implements Exchange
@@ -39,7 +39,7 @@ class DefaultExchange implements Exchange
     }
 
     /**
-     * @param string $exchangeUrl
+     * @param string          $exchangeUrl
      * @param Connection|null $connection
      *
      * @throws ConnectorException
@@ -92,13 +92,14 @@ class DefaultExchange implements Exchange
     }
 
     /**
-     * @deprecated Will be removed in 2.0. Use nomics instead
-     *
      * @param Symbol $symbol
      * @param string $interval
-     * @param int $limit
+     * @param int    $limit
+     *
      * @return array
      * @throws ConnectorException
+     * @deprecated Will be removed in 2.0. Use nomics instead
+     *
      */
     public function candles(Symbol $symbol, string $interval, int $limit): array
     {
@@ -132,9 +133,10 @@ class DefaultExchange implements Exchange
     }
 
     /**
-     * @param int $limit
+     * @param int      $limit
      *
      * @param int|null $orderId
+     *
      * @return WaitResponse|array
      *
      * @throws ConnectorException
@@ -145,7 +147,7 @@ class DefaultExchange implements Exchange
     }
 
     /**
-     * @param Symbol $symbol
+     * @param Symbol     $symbol
      * @param string|int $id
      *
      * @return array
@@ -161,10 +163,11 @@ class DefaultExchange implements Exchange
     }
 
     /**
-     * @param Symbol $symbol
-     * @param int $limit
+     * @param Symbol   $symbol
+     * @param int      $limit
      *
      * @param int|null $orderId
+     *
      * @return array
      *
      * @throws ConnectorException
@@ -181,8 +184,8 @@ class DefaultExchange implements Exchange
      * @param string $type
      * @param string $side
      * @param Symbol $symbol
-     * @param float $price
-     * @param float $qty
+     * @param float  $price
+     * @param float  $qty
      *
      * @return string
      *
@@ -203,38 +206,6 @@ class DefaultExchange implements Exchange
             'price' => $price,
             'qty' => $qty,
         ]);
-    }
-    
-    /**
-     * @param string $side
-     * @param Symbol $symbol
-     * @param float $price
-     * @param float $qty
-     * @param float $stopPrice
-     *
-     * @return string
-     *
-     * @throws StopLossNotAvailableException
-     */
-    public function stopLoss(string $side, Symbol $symbol, float $price, float $qty, float $stopPrice): string
-    {
-        throw new StopLossNotAvailableException('STOP LOSS is not supported on this exchange');
-    }
-
-    /**
-     * @param string $side
-     * @param Symbol $symbol
-     * @param float $price
-     * @param float $qty
-     * @param float $stopPrice
-     *
-     * @return string
-     *
-     * @throws TakeProfitNotAvailableException
-     */
-    public function takeProfit(string $side, Symbol $symbol, float $price, float $qty, float $stopPrice): string
-    {
-        throw new TakeProfitNotAvailableException('TAKE PROFIT is not supported on this exchange');
     }
     
     /**
@@ -285,7 +256,7 @@ class DefaultExchange implements Exchange
 
     /**
      * @param Symbol $symbol
-     * @param int $depth
+     * @param int    $depth
      *
      * @return array
      *
@@ -314,8 +285,8 @@ class DefaultExchange implements Exchange
      *
      * @param string $method
      * @param string $endpoint
-     * @param array $data
-     * @param array $headers
+     * @param array  $data
+     * @param array  $headers
      *
      * @return mixed
      *
@@ -370,5 +341,37 @@ class DefaultExchange implements Exchange
         } catch (Exception | Throwable $e) {
             throw new ConnectorException($e->getMessage());
         }
+    }
+
+    /**
+     * @param string $side
+     * @param Symbol $symbol
+     * @param float  $price
+     * @param float  $qty
+     * @param float  $stopPrice
+     *
+     * @return string
+     *
+     * @throws StopLossNotAvailableException
+     */
+    public function stopLoss(string $side, Symbol $symbol, float $price, float $qty, float $stopPrice): string
+    {
+        throw new StopLossNotAvailableException('STOP LOSS is not supported on this exchange');
+    }
+
+    /**
+     * @param string $side
+     * @param Symbol $symbol
+     * @param float  $price
+     * @param float  $qty
+     * @param float  $stopPrice
+     *
+     * @return string
+     *
+     * @throws TakeProfitNotAvailableException
+     */
+    public function takeProfit(string $side, Symbol $symbol, float $price, float $qty, float $stopPrice): string
+    {
+        throw new TakeProfitNotAvailableException('TAKE PROFIT is not supported on this exchange');
     }
 }

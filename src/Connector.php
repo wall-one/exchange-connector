@@ -8,6 +8,7 @@ use MZNX\ExchangeConnector\Exchange\Binance;
 use MZNX\ExchangeConnector\Exchange\DefaultExchange;
 use MZNX\ExchangeConnector\Exchange\Exchange;
 use MZNX\ExchangeConnector\Exchange\Huobi;
+use MZNX\ExchangeConnector\Exchange\Okex;
 
 class Connector
 {
@@ -61,6 +62,7 @@ class Connector
             Huobi::LABEL_RU => Huobi::class,
             Huobi::LABEL_US => Huobi::class,
             Huobi::LABEL_CH => Huobi::class,
+            Okex::LABEL => Okex::class
         ];
 
         $exchange = mb_strtolower($connection->getExchange());
