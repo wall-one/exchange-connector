@@ -65,9 +65,9 @@ class WithdrawalFactory extends AbstractFactory
 
         return new Withdrawal(
             (float)$response['amount'],
-            mb_strtoupper($response['asset']),
             $response['address'],
             $response['addressTag'],
+            mb_strtoupper($response['asset']),
             $response['txId'],
             DateTime::createFromFormat('U', (string)round($response['applyTime'] / 1000)),
             $status
