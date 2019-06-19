@@ -37,7 +37,7 @@ class Client
      */
     public function walletInfo(): array
     {
-        return $this->request(self::GET, '/spot/v3/accounts');
+        return $this->request(self::GET, '/account/v3/wallet');
     }
 
     /**
