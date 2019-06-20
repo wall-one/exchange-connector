@@ -76,6 +76,10 @@ class Okex implements Exchange
     {
         $response = $this->client->walletInfo();
 
+        if ( empty( $response ) ) {
+            return [];
+        }
+
         return array_merge(...array_map(
             static function (array $balance) {
                 return [mb_strtoupper($balance['currency']) => (float)$balance['balance']];
