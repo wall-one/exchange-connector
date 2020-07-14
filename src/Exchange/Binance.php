@@ -433,28 +433,34 @@ class Binance implements Exchange
      */
     public function deposits(): array
     {
+        $find = true;
         $history = [];
 
         $startDate = Carbon::createFromDate(2017, 1, 1);
-        $endDate = $startDate->addDays(90);
+        $endDate = Carbon::createFromDate(2017, 1, 1)->addDays(90);
         $currentDate = Carbon::now();
 
-        while ($endDate->timestamp < $currentDate->timestamp) {
-            try {
-                $params = [
-                    'status' => 1,
-                    'startTime' => $startDate->timestamp * 1000,
-                    'endTime' => $endDate->timestamp * 1000
-                ];
+        while ($find) {
+            if ($endDate->timestamp > $currentDate->timestamp) {
+                $find = false;
+                $endDate = Carbon::createFromTimestamp($currentDate->timestamp);
+            }
 
+            $params = [
+                'status' => 1,
+                'startTime' => $startDate->timestamp * 1000,
+                'endTime' => $endDate->timestamp * 1000
+            ];
+
+            try {
                 $response = static::wrapRequest($this->client->depositHistory(null, $params));
                 $history = array_merge($history, $response['depositList']);
-
-                $startDate->addDays(90);
-                $endDate->addDays(90);
             } catch (Exception $e) {
                 throw new ConnectorException($e->getMessage(), $e->getCode(), $e);
             }
+
+            $startDate->addDays(90);
+            $endDate->addDays(90);
         }
 
         return array_map(
@@ -473,18 +479,41 @@ class Binance implements Exchange
      */
     public function withdrawals(): array
     {
-        try {
-            $history = static::wrapRequest($this->client->withdrawHistory());
-        } catch (Exception $e) {
-            throw new ConnectorException($e->getMessage(), $e->getCode(), $e);
+        $find = true;
+        $history = [];
+
+        $startDate = Carbon::createFromDate(2017, 1, 1);
+        $endDate = Carbon::createFromDate(2017, 1, 1)->addDays(90);
+        $currentDate = Carbon::now();
+
+        while ($find) {
+            if ($endDate->timestamp > $currentDate->timestamp) {
+                $find = false;
+                $endDate = Carbon::createFromTimestamp($currentDate->timestamp);
+            }
+
+            $params = [
+                'status' => 6,
+                'startTime' => $startDate->timestamp * 1000,
+                'endTime' => $endDate->timestamp * 1000
+            ];
+
+            try {
+                $response = static::wrapRequest($this->client->withdrawHistory(null, $params));
+                $history = array_merge($history, $response['withdrawList']);
+            } catch (Exception $e) {
+                throw new ConnectorException($e->getMessage(), $e->getCode(), $e);
+            }
+
+            $startDate->addDays(90);
+            $endDate->addDays(90);
         }
 
         return array_map(
             function (array $item) {
                 return $this->factory->getFactory(Withdrawal::class)
                     ->createFromResponse($item)->toArray();
-            },
-            $history['withdrawList']
+            }, $history
         );
     }
 

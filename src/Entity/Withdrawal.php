@@ -48,7 +48,7 @@ class Withdrawal implements ArrayConvertible
     public function __construct(
         float $amount,
         string $address,
-        string $addressTag,
+        ?string $addressTag,
         string $asset,
         string $txId,
         ?DateTimeInterface $applyTime,
