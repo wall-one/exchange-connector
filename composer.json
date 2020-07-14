@@ -24,7 +24,8 @@
     "jaggedsoft/php-binance-api": "dev-master",
     "ext-json": "*",
     "ext-mbstring": "*",
-    "ext-curl": "*"
+    "ext-curl": "*",
+    "nesbot/carbon": "^2.36"
   },
   "autoload": {
     "psr-4": {

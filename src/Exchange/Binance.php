@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace MZNX\ExchangeConnector\Exchange;
 
 use Binance\API;
+use Carbon\Carbon;
 use Exception;
 use MZNX\ExchangeConnector\Authenticable;
 use MZNX\ExchangeConnector\BackwardCompatible;
@@ -432,10 +433,28 @@ class Binance implements Exchange
      */
     public function deposits(): array
     {
-        try {
-            $history = static::wrapRequest($this->client->depositHistory());
-        } catch (Exception $e) {
-            throw new ConnectorException($e->getMessage(), $e->getCode(), $e);
+        $history = [];
+
+        $startDate = Carbon::createFromDate(2017, 1, 1);
+        $endDate = $startDate->addDays(90);
+        $currentDate = Carbon::now();
+
+        while ($endDate->timestamp < $currentDate->timestamp) {
+            try {
+                $params = [
+                    'status' => 1,
+                    'startTime' => $startDate->timestamp * 1000,
+                    'endTime' => $endDate->timestamp * 1000
+                ];
+
+                $response = static::wrapRequest($this->client->depositHistory(null, $params));
+                $history = array_merge($history, $response['depositList']);
+
+                $startDate->addDays(90);
+                $endDate->addDays(90);
+            } catch (Exception $e) {
+                throw new ConnectorException($e->getMessage(), $e->getCode(), $e);
+            }
         }
 
         return array_map(
@@ -443,8 +462,7 @@ class Binance implements Exchange
                 return $this->factory->getFactory(Deposit::class)
                     ->createFromResponse($item)
                     ->toArray();
-            },
-            $history['depositList']
+            }, $history
         );
     }
 
