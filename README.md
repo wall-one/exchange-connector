@@ -9,7 +9,10 @@ Universal connector for Binance, Bittrex, Huobi and Okex APIs
 
 ## How to connect
 Use Composer to import package in your project.
-`composer require mazanax/exchange-connector`
+
+```bash
+composer require mazanax/exchange-connector
+```
 
 ## How to use
 Have to choose exchange to connect and make `Connection` object with needed settings. After that, use `resolve` to make connector.
