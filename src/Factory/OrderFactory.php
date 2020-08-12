@@ -58,12 +58,18 @@ class OrderFactory extends AbstractFactory
      */
     protected function createFromBinanceResponse(array $response): ArrayConvertible
     {
+        $price = (float)$response['price'];
+
+        if ($price == 0) {
+            $price = ((float)$response['cummulativeQuoteQty']) / ((float)$response['executedQty']);
+        }
+
         return new Order(
             (string)$response['orderId'],
             Connector::buildMarketName(...$response['symbol']->toArray()),
             mb_strtoupper($response['type']),
             mb_strtoupper($response['side']),
-            (float)$response['price'],
+            $price,
             (float)($response['origQty'] ?? $response['qty']),
             array_key_exists('qty', $response)
                 ? (float)$response['qty']
